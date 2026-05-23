@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campaign Email Builder — Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Variables ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f8fafd;
+      --surface: #ffffff;
+      --surface-2: #f3f6fb;
+      --border: rgba(0,0,0,0.08);
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #4d9de0;
+      --green: #3d9e65;
+      --amber: #e07a3e;
+      --red: #c43a32;
+      --mcr: #c43a32;
+      --vis: #2f6fd6;
+      --radius: 12px;
+      --shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ────────────────────────────────────────────────────────── */
+    .sidebar {
+      width: 220px;
+      min-width: 220px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .sidebar-logo {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-logo .logo-text {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--text);
+    }
+    .sidebar-logo .logo-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .brand-toggle {
+      display: flex;
+      gap: 6px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand-btn {
+      flex: 1;
+      padding: 5px 0;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: none;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .brand-btn.mcr { color: var(--mcr); }
+    .brand-btn.mcr.active { background: var(--mcr); color: #fff; border-color: var(--mcr); }
+    .brand-btn.vis { color: var(--vis); }
+    .brand-btn.vis.active { background: var(--vis); color: #fff; border-color: var(--vis); }
+    .nav-section {
+      padding: 12px 10px;
+      flex: 1;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      transition: all 0.15s;
+      margin-bottom: 2px;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+    .nav-item:hover { background: var(--surface-2); color: var(--text); }
+    .nav-item.active { background: rgba(77,157,224,0.1); color: var(--accent); font-weight: 600; }
+    .nav-item .nav-ico { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* ── Main area ─────────────────────────────────────────────────────── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 10px; }
+    .topbar-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(77,157,224,0.12);
+      color: var(--accent);
+    }
+    .topbar-badge.demo {
+      background: rgba(224,122,62,0.12);
+      color: var(--amber);
+    }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #fff;
+    }
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px;
+    }
+
+    /* ── Cards & Grid ──────────────────────────────────────────────────── */
+    .view-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .view-header h1 { font-size: 22px; font-weight: 700; }
+    .view-header p { font-size: 13px; color: var(--muted); margin-top: 3px; }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .metric-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      box-shadow: var(--shadow);
+    }
+    .metric-card span { font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px; }
+    .metric-card strong { font-size: 28px; font-weight: 700; display: block; }
+    .metric-card small { font-size: 11px; color: var(--muted); margin-top: 4px; display: block; }
+    .metric-card strong.blue { color: var(--accent); }
+    .metric-card strong.green { color: var(--green); }
+    .metric-card strong.red { color: var(--red); }
+    .split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .panel h3 { font-size: 14px; font-weight: 600; margin-bottom: 14px; }
+
+    /* ── Buttons ───────────────────────────────────────────────────────── */
+    .btn { padding: 8px 16px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-outline { background: none; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { background: var(--surface-2); }
+    .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+    /* ── Badges ───────────────────────────────────────────────────────── */
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-borrador { background: rgba(102,102,102,0.12); color: #666; }
+    .badge-revision { background: rgba(224,122,62,0.13); color: var(--amber); }
+    .badge-aprobada { background: rgba(77,157,224,0.13); color: var(--accent); }
+    .badge-programada { background: rgba(47,111,214,0.13); color: var(--vis); }
+    .badge-enviada { background: rgba(61,158,101,0.13); color: var(--green); }
+    .badge-mcr { background: rgba(196,58,50,0.1); color: var(--mcr); }
+    .badge-vis { background: rgba(47,111,214,0.1); color: var(--vis); }
+
+    /* ── Table ─────────────────────────────────────────────────────────── */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th { font-size: 11px; font-weight: 600; color: var(--muted); text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.04em; }
+    .data-table td { padding: 12px 12px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: var(--surface-2); }
+
+    /* ── Flow list (dashboard upcoming) ────────────────────────────────── */
+    .flow-list { list-style: none; }
+    .flow-list li {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .flow-list li:last-child { border-bottom: none; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-green { background: var(--green); }
+    .dot-amber { background: var(--amber); }
+    .dot-blue { background: var(--accent); }
+
+    /* ── Calendar ─────────────────────────────────────────────────────── */
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .cal-day-header {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      padding: 6px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .cal-day {
+      min-height: 80px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 12px;
+    }
+    .cal-day.other-month { opacity: 0.35; }
+    .cal-day.today { border-color: var(--accent); background: rgba(77,157,224,0.04); }
+    .cal-day .day-num { font-weight: 600; margin-bottom: 4px; }
+    .cal-event {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 5px;
+      border-radius: 4px;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .cal-event.mcr { background: rgba(196,58,50,0.12); color: var(--mcr); }
+    .cal-event.vis { background: rgba(47,111,214,0.12); color: var(--vis); }
+    .cal-event.holiday { background: rgba(61,158,101,0.12); color: var(--green); }
+
+    /* ── Email Builder Preview ─────────────────────────────────────────── */
+    .email-preview-wrap {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 16px;
+      height: calc(100vh - 180px);
+    }
+    .sections-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow-y: auto;
+      padding: 14px;
+    }
+    .section-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.12s;
+    }
+    .section-item:hover { background: var(--surface-2); }
+    .section-item.active { border-color: var(--accent); background: rgba(77,157,224,0.06); }
+    .section-ico {
+      width: 32px; height: 32px;
+      background: var(--surface-2);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0;
+    }
+    .email-canvas {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow-y: auto;
+      display: flex; justify-content: center;
+      padding: 20px;
+    }
+    .email-body {
+      width: 600px;
+      max-width: 100%;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+    .email-section-banner {
+      background: linear-gradient(135deg, #c43a32 0%, #8b1a14 100%);
+      color: white;
+      text-align: center;
+      padding: 16px 20px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+    }
+    .email-section-hero {
+      background: #1a1a1a;
+      color: white;
+      text-align: center;
+      padding: 60px 40px;
+    }
+    .email-section-hero h2 { font-size: 32px; font-weight: 800; margin-bottom: 12px; }
+    .email-section-hero p { font-size: 15px; opacity: 0.75; margin-bottom: 24px; }
+    .email-cta {
+      display: inline-block;
+      background: #c43a32;
+      color: white;
+      padding: 12px 32px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 14px;
+      text-decoration: none;
+    }
+    .email-section-body { padding: 32px 40px; background: #fff; }
+    .email-section-body p { font-size: 14px; line-height: 1.7; color: #333; margin-bottom: 16px; }
+    .email-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+    .email-2col-item { padding: 24px 28px; background: #f8f8f8; text-align: center; }
+    .email-2col-item:first-child { background: #fff; border-right: 1px solid #eee; }
+    .email-2col-item h4 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .email-2col-item p { font-size: 13px; color: #666; margin: 0; }
+    .email-2col-item .big-num { font-size: 36px; font-weight: 800; color: #c43a32; display: block; }
+    .email-section-footer { background: #1a1a1a; color: #999; text-align: center; padding: 24px 40px; font-size: 11px; line-height: 1.8; }
+
+    /* ── Templates Gallery ─────────────────────────────────────────────── */
+    .templates-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .template-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: transform 0.15s, box-shadow 0.15s;
+      cursor: pointer;
+    }
+    .template-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.1); }
+    .template-thumb {
+      height: 160px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 40px;
+    }
+    .template-info { padding: 14px 16px; }
+    .template-info h4 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .template-info p { font-size: 11px; color: var(--muted); }
+
+    /* ── Reports ─────────────────────────────────────────────────────── */
+    .reports-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .chart-bar-wrap { margin-top: 10px; }
+    .chart-row {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 10px; font-size: 12px;
+    }
+    .chart-label { width: 120px; flex-shrink: 0; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .chart-bar-bg { flex: 1; height: 22px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+    .chart-bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 11px; font-weight: 600; color: #fff; transition: width 0.5s; }
+    .chart-val { width: 40px; text-align: right; font-weight: 600; }
+    .donut-wrap { display: flex; justify-content: center; align-items: center; flex-direction: column; gap: 10px; padding: 10px; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── AI insight box ───────────────────────────────────────────────── */
+    .insight-box {
+      background: linear-gradient(135deg, rgba(77,157,224,0.07) 0%, rgba(47,111,214,0.05) 100%);
+      border: 1px solid rgba(77,157,224,0.2);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 20px;
+    }
+    .insight-box .ico { font-size: 20px; margin-bottom: 6px; }
+    .insight-box p { font-size: 13px; color: var(--text); line-height: 1.6; }
+    .insight-box strong { color: var(--accent); }
+
+    /* ── Description section ─────────────────────────────────────────── */
+    .desc-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .desc-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .desc-card h4 { font-size: 13px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .desc-card ul { list-style: none; padding: 0; }
+    .desc-card ul li { font-size: 12px; color: var(--muted); padding: 3px 0; display: flex; align-items: flex-start; gap: 6px; }
+    .desc-card ul li::before { content: "→"; color: var(--accent); flex-shrink: 0; }
+    .tech-tag {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      margin: 3px 3px 3px 0;
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    /* ── Images view ──────────────────────────────────────────────────── */
+    .images-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .image-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .image-thumb {
+      height: 120px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px;
+      background: var(--surface-2);
+    }
+    .image-name { padding: 8px 10px; font-size: 11px; color: var(--muted); }
+
+    /* ── AC Send view ─────────────────────────────────────────────────── */
+    .send-form { max-width: 600px; }
+    .form-row { margin-bottom: 16px; }
+    .form-row label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--muted); }
+    .form-control {
+      width: 100%;
+      padding: 9px 13px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+    }
+    .send-preview-mini {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+    }
+    .send-status {
+      margin-top: 20px;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      background: rgba(61,158,101,0.1);
+      color: var(--green);
+      border: 1px solid rgba(61,158,101,0.2);
+    }
+
+    /* ── Views toggling ───────────────────────────────────────────────── */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ── Scrollbar ─────────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 10px; }
+
+    /* ── Tooltip demo tag ─────────────────────────────────────────────── */
+    .demo-tag {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #1a1a1a;
+      color: #fff;
+      font-size: 11px;
+      padding: 8px 14px;
+      border-radius: 20px;
+      z-index: 999;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ──────────────────────────────────────────────────────────── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">📧 Email Builder</div>
+    <div class="logo-sub">Campaign Manager v2.0</div>
+  </div>
+  <div class="brand-toggle">
+    <button class="brand-btn mcr active" id="btn-mcr" onclick="setBrand('mcr')">MCR</button>
+    <button class="brand-btn vis" id="btn-vis" onclick="setBrand('vis')">VIS</button>
+  </div>
+  <nav class="nav-section">
+    <button class="nav-item active" onclick="goTo('dashboard', this)">
+      <span class="nav-ico">📊</span> Dashboard
+    </button>
+    <button class="nav-item" onclick="goTo('campanias', this)">
+      <span class="nav-ico">📋</span> Campañas
+    </button>
+    <button class="nav-item" onclick="goTo('calendario', this)">
+      <span class="nav-ico">📅</span> Calendario
+    </button>
+    <button class="nav-item" onclick="goTo('editor', this)">
+      <span class="nav-ico">✏️</span> Editor de Email
+    </button>
+    <button class="nav-item" onclick="goTo('templates', this)">
+      <span class="nav-ico">✦</span> Templates
+    </button>
+    <button class="nav-item" onclick="goTo('imagenes', this)">
+      <span class="nav-ico">🖼️</span> Imágenes AC
+    </button>
+    <button class="nav-item" onclick="goTo('envio', this)">
+      <span class="nav-ico">🚀</span> Envío a AC
+    </button>
+    <button class="nav-item" onclick="goTo('reportes', this)">
+      <span class="nav-ico">📈</span> Reportes
+    </button>
+    <button class="nav-item" onclick="goTo('descripcion', this)" style="margin-top: 10px; border-top: 1px solid var(--border); padding-top: 14px;">
+      <span class="nav-ico">ℹ️</span> Acerca del proyecto
+    </button>
+  </nav>
+</aside>
+
+<!-- ── MAIN ─────────────────────────────────────────────────────────────── -->
+<div class="main">
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <span id="topbar-brand-name" class="topbar-badge">Miles Car Rental</span>
+      <span class="topbar-badge demo">Demo — datos de muestra</span>
+    </div>
+    <div class="topbar-right">
+      <span style="font-size:12px; color:var(--muted)">Ana López</span>
+      <div class="avatar" style="background:#c43a32">AL</div>
+    </div>
+  </header>
+
+  <!-- Content area -->
+  <div class="content">
+
+    <!-- ══════════════════════════════════════════════════════ DASHBOARD -->
+    <div id="view-dashboard" class="view active">
+      <div class="view-header">
+        <div>
+          <h1>Dashboard</h1>
+          <p>Resumen operativo en tiempo real · Mayo 2026</p>
+        </div>
+        <button class="btn btn-primary" onclick="goTo('campanias', document.querySelector('[onclick*=campanias]'))">+ Nueva campaña</button>
+      </div>
+
+      <div class="metric-grid">
+        <div class="metric-card">
+          <span>Campañas en sistema</span>
+          <strong>32</strong>
+          <small>8 borrador · 5 revisión · 12 enviadas</small>
+        </div>
+        <div class="metric-card">
+          <span>Planes de calendario</span>
+          <strong class="blue">8</strong>
+          <small>6 envíos próximos programados</small>
+        </div>
+        <div class="metric-card">
+          <span>Campañas AC analizadas</span>
+          <strong class="green">45</strong>
+          <small>Historial real de ActiveCampaign</small>
+        </div>
+        <div class="metric-card">
+          <span>Mejor ventana de apertura</span>
+          <strong style="font-size:20px">Martes</strong>
+          <small>10:00 AM · 28.4% open rate promedio</small>
+        </div>
+      </div>
+
+      <div class="insight-box">
+        <div class="ico">🤖</div>
+        <p>El <strong>Martes</strong> a las <strong>10:00 AM</strong> es tu mejor ventana de apertura con un <strong>28.4%</strong> de open rate promedio — basado en <strong>45</strong> campañas reales enviadas a través de ActiveCampaign. Los días Miércoles y Jueves son también óptimos con 26.1% y 24.8% respectivamente.</p>
+      </div>
+
+      <div class="split-grid">
+        <div class="panel">
+          <h3>📅 Próximos envíos recomendados</h3>
+          <ul class="flow-list">
+            <li>
+              <span class="dot dot-green"></span>
+              <div style="flex:1">
+                <strong>2026-05-27</strong> · <span style="font-size:11px;color:var(--muted)">10:00 AM</span>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">Día del Niño · MCR · Promocional</div>
+              </div>
+              <span style="font-size:11px;font-weight:700;color:var(--green)">92</span>
+            </li>
+            <li>
+              <span class="dot dot-amber"></span>
+              <div style="flex:1">
+                <strong>2026-06-03</strong> · <span style="font-size:11px;color:var(--muted)">09:30 AM</span>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">Temporada Baja · Viajemos · Informativo</div>
+              </div>
+              <span style="font-size:11px;font-weight:700;color:var(--amber)">74</span>
+            </li>
+            <li>
+              <span class="dot dot-blue"></span>
+              <div style="flex:1">
+                <strong>2026-06-10</strong> · <span style="font-size:11px;color:var(--muted)">11:00 AM</span>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">Campaña Verano · MCR · Reactivación</div>
+              </div>
+              <span style="font-size:11px;font-weight:700;color:var(--accent)">81</span>
+            </li>
+            <li>
+              <span class="dot dot-green"></span>
+              <div style="flex:1">
+                <strong>2026-06-17</strong> · <span style="font-size:11px;color:var(--muted)">10:00 AM</span>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">Día del Padre · MCR · Promocional</div>
+              </div>
+              <span style="font-size:11px;font-weight:700;color:var(--green)">89</span>
+            </li>
+          </ul>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="panel">
+            <h3>⚡ Acciones rápidas</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+              <button class="btn btn-outline" onclick="goTo('campanias', document.querySelector('[onclick*=campanias]'))" style="padding:12px;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px">
+                <span style="font-size:20px">📋</span> Nueva campaña
+              </button>
+              <button class="btn btn-outline" onclick="goTo('calendario', document.querySelector('[onclick*=calendario]'))" style="padding:12px;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px">
+                <span style="font-size:20px">📅</span> Calendario IA
+              </button>
+              <button class="btn btn-outline" onclick="goTo('editor', document.querySelector('[onclick*=editor]'))" style="padding:12px;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px">
+                <span style="font-size:20px">✏️</span> Editor Email
+              </button>
+              <button class="btn btn-outline" onclick="goTo('templates', document.querySelector('[onclick*=templates]'))" style="padding:12px;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px">
+                <span style="font-size:20px">✦</span> Templates
+              </button>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>📈 Mejores días de la semana</h3>
+            <div class="chart-bar-wrap">
+              <div class="chart-row">
+                <div class="chart-label">Martes</div>
+                <div class="chart-bar-bg"><div class="chart-bar-fill" style="width:95%;background:var(--accent)">28.4%</div></div>
+              </div>
+              <div class="chart-row">
+                <div class="chart-label">Miércoles</div>
+                <div class="chart-bar-bg"><div class="chart-bar-fill" style="width:87%;background:var(--accent)">26.1%</div></div>
+              </div>
+              <div class="chart-row">
+                <div class="chart-label">Jueves</div>
+                <div class="chart-bar-bg"><div class="chart-bar-fill" style="width:82%;background:var(--accent)">24.8%</div></div>
+              </div>
+              <div class="chart-row">
+                <div class="chart-label">Lunes</div>
+                <div class="chart-bar-bg"><div class="chart-bar-fill" style="width:66%;background:rgba(77,157,224,0.5)">19.8%</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════ CAMPAÑAS -->
+    <div id="view-campanias" class="view">
+      <div class="view-header">
+        <div>
+          <h1>Campañas</h1>
+          <p>Gestión y seguimiento del flujo editorial</p>
+        </div>
+        <button class="btn btn-primary">+ Nueva campaña</button>
+      </div>
+
+      <div class="metric-grid" style="grid-template-columns:repeat(5,1fr)">
+        <div class="metric-card"><span>Total</span><strong>32</strong></div>
+        <div class="metric-card"><span>Borrador</span><strong style="color:var(--muted)">8</strong></div>
+        <div class="metric-card"><span>En revisión</span><strong style="color:var(--amber)">5</strong></div>
+        <div class="metric-card"><span>Aprobada</span><strong style="color:var(--accent)">7</strong></div>
+        <div class="metric-card"><span>Enviada</span><strong class="green">12</strong></div>
+      </div>
+
+      <div class="panel">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Marca</th>
+              <th>Tipo</th>
+              <th>Responsable</th>
+              <th>Fecha límite</th>
+              <th>Estado</th>
+              <th>Email IA</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Día del Niño 2026</strong></td>
+              <td><span class="badge badge-mcr">MCR</span></td>
+              <td>Promocional</td>
+              <td>Ana López</td>
+              <td>2026-05-27</td>
+              <td><span class="badge badge-aprobada">Aprobada</span></td>
+              <td><span style="color:var(--green);font-weight:700">✓ Generado</span></td>
+              <td><button class="btn btn-sm btn-outline">Editar</button></td>
+            </tr>
+            <tr>
+              <td><strong>Temporada Baja Junio</strong></td>
+              <td><span class="badge badge-vis">VIS</span></td>
+              <td>Informativo</td>
+              <td>Luis Ramírez</td>
+              <td>2026-06-03</td>
+              <td><span class="badge badge-revision">En revisión</span></td>
+              <td><span style="color:var(--green);font-weight:700">✓ Generado</span></td>
+              <td><button class="btn btn-sm btn-outline">Editar</button></td>
+            </tr>
+            <tr>
+              <td><strong>Campaña Verano MCR</strong></td>
+              <td><span class="badge badge-mcr">MCR</span></td>
+              <td>Reactivación</td>
+              <td>María Campos</td>
+              <td>2026-06-10</td>
+              <td><span class="badge badge-borrador">Borrador</span></td>
+              <td><span style="color:var(--muted);font-size:12px">— Pendiente</span></td>
+              <td><button class="btn btn-sm btn-outline">Generar</button></td>
+            </tr>
+            <tr>
+              <td><strong>Día del Padre VIS</strong></td>
+              <td><span class="badge badge-vis">VIS</span></td>
+              <td>Promocional</td>
+              <td>Jorge Vega</td>
+              <td>2026-06-17</td>
+              <td><span class="badge badge-programada">Programada</span></td>
+              <td><span style="color:var(--green);font-weight:700">✓ Generado</span></td>
+              <td><button class="btn btn-sm btn-outline">Ver</button></td>
+            </tr>
+            <tr>
+              <td><strong>Reactivación Inactivos Q2</strong></td>
+              <td><span class="badge badge-mcr">MCR</span></td>
+              <td>Reactivación</td>
+              <td>Paula Rojas</td>
+              <td>2026-05-30</td>
+              <td><span class="badge badge-enviada">Enviada</span></td>
+              <td><span style="color:var(--green);font-weight:700">✓ Generado</span></td>
+              <td><button class="btn btn-sm btn-outline">Reporte</button></td>
+            </tr>
+            <tr>
+              <td><strong>Newsletter Mayo</strong></td>
+              <td><span class="badge badge-vis">VIS</span></td>
+              <td>Informativo</td>
+              <td>Ana López</td>
+              <td>2026-05-20</td>
+              <td><span class="badge badge-enviada">Enviada</span></td>
+              <td><span style="color:var(--green);font-weight:700">✓ Generado</span></td>
+              <td><button class="btn btn-sm btn-outline">Reporte</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════ CALENDARIO -->
+    <div id="view-calendario" class="view">
+      <div class="view-header">
+        <div>
+          <h1>Calendario de Campañas</h1>
+          <p>Planificación mensual con IA · Junio 2026</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline btn-sm">◀ Mayo</button>
+          <button class="btn btn-outline btn-sm">Julio ▶</button>
+          <button class="btn btn-primary btn-sm">🤖 Recomendar fechas</button>
+        </div>
+      </div>
+
+      <div class="insight-box" style="margin-bottom:20px">
+        <div class="ico">🤖</div>
+        <p>Para <strong>Junio</strong>, la IA recomienda enviar el <strong>3 y 10 de junio</strong> (miércoles) a las <strong>10:00 AM</strong>. El Día del Padre (15 de junio) es una oportunidad clave — campaña de <strong>Viajemos</strong> recomendada con 7 días de anticipación.</p>
+      </div>
+
+      <div class="panel">
+        <div class="cal-grid" style="margin-bottom:8px">
+          <div class="cal-day-header">Lun</div>
+          <div class="cal-day-header">Mar</div>
+          <div class="cal-day-header">Mié</div>
+          <div class="cal-day-header">Jue</div>
+          <div class="cal-day-header">Vie</div>
+          <div class="cal-day-header">Sáb</div>
+          <div class="cal-day-header">Dom</div>
+        </div>
+        <div class="cal-grid">
+          <!-- Week 1 -->
+          <div class="cal-day other-month"><div class="day-num">26</div></div>
+          <div class="cal-day other-month"><div class="day-num">27</div></div>
+          <div class="cal-day other-month"><div class="day-num">28</div></div>
+          <div class="cal-day other-month"><div class="day-num">29</div></div>
+          <div class="cal-day other-month"><div class="day-num">30</div></div>
+          <div class="cal-day other-month"><div class="day-num">31</div></div>
+          <div class="cal-day"><div class="day-num">1</div></div>
+          <!-- Week 2 -->
+          <div class="cal-day"><div class="day-num">2</div></div>
+          <div class="cal-day" style="border-color:var(--accent);background:rgba(77,157,224,0.04)">
+            <div class="day-num">3</div>
+            <div class="cal-event vis">VIS · Temporada Baja</div>
+          </div>
+          <div class="cal-day"><div class="day-num">4</div></div>
+          <div class="cal-day"><div class="day-num">5</div></div>
+          <div class="cal-day"><div class="day-num">6</div></div>
+          <div class="cal-day"><div class="day-num">7</div></div>
+          <div class="cal-day"><div class="day-num">8</div></div>
+          <!-- Week 3 -->
+          <div class="cal-day"><div class="day-num">9</div></div>
+          <div class="cal-day">
+            <div class="day-num">10</div>
+            <div class="cal-event mcr">MCR · Campaña Verano</div>
+          </div>
+          <div class="cal-day"><div class="day-num">11</div></div>
+          <div class="cal-day"><div class="day-num">12</div></div>
+          <div class="cal-day"><div class="day-num">13</div></div>
+          <div class="cal-day"><div class="day-num">14</div></div>
+          <div class="cal-day">
+            <div class="day-num">15</div>
+            <div class="cal-event holiday">🎖 Día del Padre</div>
+          </div>
+          <!-- Week 4 -->
+          <div class="cal-day"><div class="day-num">16</div></div>
+          <div class="cal-day">
+            <div class="day-num">17</div>
+            <div class="cal-event vis">VIS · Día del Padre</div>
+            <div class="cal-event mcr">MCR · Día del Padre</div>
+          </div>
+          <div class="cal-day"><div class="day-num">18</div></div>
+          <div class="cal-day"><div class="day-num">19</div></div>
+          <div class="cal-day"><div class="day-num">20</div></div>
+          <div class="cal-day"><div class="day-num">21</div></div>
+          <div class="cal-day"><div class="day-num">22</div></div>
+          <!-- Week 5 -->
+          <div class="cal-day"><div class="day-num">23</div></div>
+          <div class="cal-day"><div class="day-num">24</div></div>
+          <div class="cal-day"><div class="day-num">25</div></div>
+          <div class="cal-day"><div class="day-num">26</div></div>
+          <div class="cal-day"><div class="day-num">27</div></div>
+          <div class="cal-day"><div class="day-num">28</div></div>
+          <div class="cal-day"><div class="day-num">29</div></div>
+          <!-- Week 6 -->
+          <div class="cal-day"><div class="day-num">30</div></div>
+          <div class="cal-day other-month"><div class="day-num">1</div></div>
+          <div class="cal-day other-month"><div class="day-num">2</div></div>
+          <div class="cal-day other-month"><div class="day-num">3</div></div>
+          <div class="cal-day other-month"><div class="day-num">4</div></div>
+          <div class="cal-day other-month"><div class="day-num">5</div></div>
+          <div class="cal-day other-month"><div class="day-num">6</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════ EDITOR -->
+    <div id="view-editor" class="view">
+      <div class="view-header">
+        <div>
+          <h1>Editor de Email</h1>
+          <p>Día del Niño 2026 · Miles Car Rental · Generado con IA</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline">🤖 Regenerar con IA</button>
+          <button class="btn btn-outline">Versiones</button>
+          <button class="btn btn-primary">🚀 Enviar a AC</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 280px;gap:12px;margin-bottom:12px">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span style="font-size:12px;font-weight:700;color:var(--muted)">Asunto:</span>
+            <span style="font-size:13px">🎉 ¡Este Día del Niño, tu aventura comienza con Miles!</span>
+            <span class="badge" style="background:rgba(61,158,101,0.1);color:var(--green)">✓ IA generado</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+            <span style="font-size:12px;font-weight:700;color:var(--muted)">Preheader:</span>
+            <span style="font-size:12px;color:var(--muted)">Renta tu auto, crea memorias. Hasta 30% OFF este 27 de mayo.</span>
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-size:12px">
+          <div style="margin-bottom:6px"><strong>Marca:</strong> Miles Car Rental</div>
+          <div style="margin-bottom:6px"><strong>Tipo:</strong> Promocional</div>
+          <div style="margin-bottom:6px"><strong>Score IA:</strong> <span style="color:var(--green);font-weight:700">92 / 100</span></div>
+          <div><strong>Secciones:</strong> 5</div>
+        </div>
+      </div>
+
+      <div class="email-preview-wrap" style="height:auto">
+        <div class="sections-panel" style="height:420px">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">Secciones del email</div>
+          <div class="section-item active">
+            <div class="section-ico">📢</div>
+            <div>
+              <div style="font-weight:600;font-size:12px">Banner superior</div>
+              <div style="font-size:11px;color:var(--muted)">Anuncio promocional</div>
+            </div>
+          </div>
+          <div class="section-item">
+            <div class="section-ico">🦸</div>
+            <div>
+              <div style="font-weight:600;font-size:12px">Hero principal</div>
+              <div style="font-size:11px;color:var(--muted)">Imagen + CTA</div>
+            </div>
+          </div>
+          <div class="section-item">
+            <div class="section-ico">📝</div>
+            <div>
+              <div style="font-weight:600;font-size:12px">Cuerpo de texto</div>
+              <div style="font-size:11px;color:var(--muted)">Mensaje principal</div>
+            </div>
+          </div>
+          <div class="section-item">
+            <div class="section-ico">📊</div>
+            <div>
+              <div style="font-weight:600;font-size:12px">2 columnas</div>
+              <div style="font-size:11px;color:var(--muted)">Beneficios</div>
+            </div>
+          </div>
+          <div class="section-item">
+            <div class="section-ico">📧</div>
+            <div>
+              <div style="font-weight:600;font-size:12px">Footer</div>
+              <div style="font-size:11px;color:var(--muted)">Pie de página legal</div>
+            </div>
+          </div>
+          <button class="btn btn-outline" style="width:100%;margin-top:10px;font-size:12px">+ Agregar sección</button>
+        </div>
+
+        <div class="email-canvas" style="height:420px">
+          <div class="email-body">
+            <div class="email-section-banner">
+              🎉 DÍA DEL NIÑO — HASTA 30% OFF EN RENTA DE AUTOS · VÁLIDO 27 DE MAYO
+            </div>
+            <div class="email-section-hero">
+              <div style="font-size:11px;letter-spacing:0.15em;opacity:0.6;margin-bottom:12px">MILES CAR RENTAL</div>
+              <h2>Este Día del Niño,<br>¡la aventura espera!</h2>
+              <p>Crea recuerdos únicos con tu familia.<br>Renta tu auto con hasta 30% de descuento.</p>
+              <a href="#" class="email-cta">RESERVA AHORA</a>
+            </div>
+            <div class="email-section-body">
+              <p>Querido cliente,</p>
+              <p>El <strong>Día del Niño</strong> es el momento perfecto para llevar a tu familia a una aventura sin límites. En Miles Car Rental queremos ser parte de ese viaje especial, por eso te ofrecemos nuestra mejor tarifa del año.</p>
+              <p>Con nuestra flota de más de 200 vehículos disponibles en toda la república, encontrarás el auto ideal para tu familia.</p>
+            </div>
+            <div class="email-2col">
+              <div class="email-2col-item">
+                <span class="big-num">30%</span>
+                <h4>Descuento especial</h4>
+                <p>En todas nuestras categorías de autos este Día del Niño</p>
+              </div>
+              <div class="email-2col-item">
+                <span class="big-num">200+</span>
+                <h4>Autos disponibles</h4>
+                <p>Desde compactos hasta SUVs familiares en toda la república</p>
+              </div>
+            </div>
+            <div class="email-section-footer">
+              <strong style="color:#fff">Miles Car Rental</strong><br>
+              Av. Insurgentes Sur 1234, CDMX · Tel: 55 5000-0000<br>
+              <a href="#" style="color:#4d9de0">Cancelar suscripción</a> · <a href="#" style="color:#4d9de0">Política de privacidad</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════ TEMPLATES -->
+    <div id="view-templates" class="view">
+      <div class="view-header">
+        <div>
+          <h1>✦ Templates</h1>
+          <p>Galería de plantillas de email + Template Lab con IA</p>
+        </div>
+        <button class="btn btn-primary" onclick="alert('Template Lab: la IA genera variaciones automáticas de cualquier template')">🤖 Template Lab</button>
+      </div>
+
+      <div class="templates-grid">
+        <div class="template-card">
+          <div class="template-thumb" style="background:linear-gradient(135deg,#1a1a1a,#333)">🚗</div>
+          <div class="template-info">
+            <h4>Hero Oscuro MCR</h4>
+            <p>Hero de alto impacto · Fondo negro · CTA rojo · MCR</p>
+          </div>
+        </div>
+        <div class="template-card">
+          <div class="template-thumb" style="background:linear-gradient(135deg,#2f6fd6,#1a3a7c)">✈️</div>
+          <div class="template-info">
+            <h4>Travel Hero VIS</h4>
+            <p>Hero de viaje con imagen fullwidth · Viajemos azul</p>
+          </div>
+        </div>
+        <div class="template-card">
+          <div class="template-thumb" style="background:linear-gradient(135deg,#f8f8f8,#e8e8e8)">📊</div>
+          <div class="template-info">
+            <h4>2 Columnas Beneficios</h4>
+            <p>Layout doble columna para destacar ventajas</p>
+          </div>
+        </div>
+        <div class="template-card">
+          <div class="template-thumb" style="background:linear-gradient(135deg,#3d9e65,#1a5c36)">🌿</div>
+          <div class="template-info">
+            <h4>Temporada / Estacional</h4>
+            <p>Diseño adaptable a fechas especiales y festividades</p>
+          </div>
+        </div>
+        <div class="template-card">
+          <div class="template-thumb" style="background:linear-gradient(135deg,#e07a3e,#8b3a10)">🔥</div>
+          <div class="template-info">
+            <h4>Urgencia / Countdown</h4>
+            <p>Offer con fecha límite y call-to-action de alta presión</p>
+          </div>
+        </div>
+        <div class="template-card" style="border:2px dashed rgba(77,157,224,0.3);background:rgba(77,157,224,0.03)">
+          <div class="template-thumb" style="background:transparent;font-size:32px">✨</div>
+          <div class="template-info">
+            <h4 style="color:var(--accent)">Generar con IA</h4>
+            <p>Template Lab crea variaciones únicas con GPT-4o</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:20px">
+        <h3>🤖 Template Lab — Variaciones generadas por IA</h3>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px">
+          <div style="border:1px solid var(--border);border-radius:10px;padding:14px">
+            <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">VARIACIÓN A · Emocional</div>
+            <div style="font-size:12px;color:var(--muted)">Tono cálido, enfocado en la experiencia familiar. Hero con imagen lifestyle. CTA: "Crea el viaje".</div>
+          </div>
+          <div style="border:1px solid var(--border);border-radius:10px;padding:14px">
+            <div style="font-size:11px;font-weight:700;color:var(--amber);margin-bottom:6px">VARIACIÓN B · Urgencia</div>
+            <div style="font-size:12px;color:var(--muted)">Countdown visible, descuento prominente. Fondo oscuro. CTA: "Aprovecha ahora". Alta conversión.</div>
+          </div>
+          <div style="border:1px solid var(--border);border-radius:10px;padding:14px">
+            <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:6px">VARIACIÓN C · Minimalista</div>
+            <div style="font-size:12px;color:var(--muted)">Layout limpio, tipografía grande. Una sola imagen. Foco total en el mensaje principal.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════ IMÁGENES -->
+    <div id="view-imagenes" class="view">
+      <div class="view-header">
+        <div>
+          <h1>Imágenes AC</h1>
+          <p>Biblioteca de imágenes sincronizada con ActiveCampaign</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <input type="text" placeholder="🔍 Buscar imagen..." style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;width:200px">
+          <button class="btn btn-outline">🔄 Sincronizar AC</button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <span style="font-size:12px;color:var(--muted)">Sincronizadas desde ActiveCampaign:</span>
+        <span class="badge" style="background:rgba(61,158,101,0.1);color:var(--green)">✓ 48 imágenes · Última sync: hace 2 horas</span>
+      </div>
+
+      <div class="images-grid">
+        <div class="image-card"><div class="image-thumb">🚗</div><div class="image-name">mcr-banner-hero.jpg</div></div>
+        <div class="image-card"><div class="image-thumb">🏖️</div><div class="image-name">vis-verano-2026.jpg</div></div>
+        <div class="image-card"><div class="image-thumb">✈️</div><div class="image-name">vis-avion-lifestyle.jpg</div></div>
+        <div class="image-card"><div class="image-thumb">👨‍👩‍👧‍👦</div><div class="image-name">mcr-familia-auto.jpg</div></div>
+        <div class="image-card"><div class="image-thumb">🌆</div><div class="image-name">mcr-ciudad-noche.jpg</div></div>
+        <div class="image-card"><div class="image-thumb">🗺️</div><div class="image-name">vis-mapa-destinos.jpg</div></div>
+        <div class="image-card"><div class="image-thumb">⭐</div><div class="image-name">mcr-logo-white.png</div></div>
+        <div class="image-card"><div class="image-thumb">🎉</div><div class="image-name">vis-logo-blue.png</div></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════ ENVÍO AC -->
+    <div id="view-envio" class="view">
+      <div class="view-header">
+        <div>
+          <h1>Envío a ActiveCampaign</h1>
+          <p>Programa y envía campañas directamente a tu cuenta AC</p>
+        </div>
+        <span class="badge" style="background:rgba(61,158,101,0.1);color:var(--green);font-size:13px;padding:6px 14px">✓ Conectado a ActiveCampaign</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div>
+          <div class="panel" style="margin-bottom:16px">
+            <h3>Configuración del envío</h3>
+            <div class="send-form">
+              <div class="form-row">
+                <label>Campaña a enviar</label>
+                <select class="form-control">
+                  <option>Día del Niño 2026 · MCR</option>
+                  <option>Temporada Baja Junio · VIS</option>
+                  <option>Campaña Verano MCR</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label>Lista de contactos en AC</label>
+                <select class="form-control">
+                  <option>Lista Principal MCR (12,450 contactos)</option>
+                  <option>Viajeros frecuentes VIS (8,231 contactos)</option>
+                  <option>Reactivación inactivos (3,100 contactos)</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label>Fecha y hora de envío</label>
+                <input type="datetime-local" class="form-control" value="2026-05-27T10:00">
+              </div>
+              <div class="form-row">
+                <label>Tipo de envío</label>
+                <select class="form-control">
+                  <option>Envío programado</option>
+                  <option>Envío inmediato</option>
+                  <option>Envío de prueba (test email)</option>
+                </select>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:16px">
+                <button class="btn btn-outline" onclick="alert('Email de prueba enviado a guaunokoujiayanodog@gmail.com')">📧 Envío de prueba</button>
+                <button class="btn btn-primary" onclick="document.getElementById('send-status').style.display='block'">🚀 Programar envío</button>
+              </div>
+            </div>
+          </div>
+          <div id="send-status" style="display:none" class="send-status">
+            ✓ <strong>Campaña programada exitosamente en ActiveCampaign.</strong><br>
+            La campaña "Día del Niño 2026" será enviada el 27 de mayo a las 10:00 AM a 12,450 contactos.
+          </div>
+        </div>
+
+        <div>
+          <div class="panel">
+            <h3>Vista previa del envío</h3>
+            <div class="send-preview-mini">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:8px">PREVIEW</div>
+              <div style="background:#1a1a1a;color:#fff;padding:20px;border-radius:8px;text-align:center">
+                <div style="font-size:10px;letter-spacing:0.1em;opacity:0.5;margin-bottom:8px">MILES CAR RENTAL</div>
+                <div style="font-size:18px;font-weight:800;margin-bottom:8px">🎉 Día del Niño 2026</div>
+                <div style="font-size:12px;opacity:0.6;margin-bottom:16px">Hasta 30% OFF · Renta tu aventura</div>
+                <div style="background:#c43a32;color:#fff;padding:8px 20px;border-radius:4px;font-size:12px;font-weight:700;display:inline-block">RESERVA AHORA</div>
+              </div>
+              <div style="margin-top:12px;font-size:12px;color:var(--muted)">
+                <strong>Asunto:</strong> 🎉 ¡Este Día del Niño, tu aventura comienza con Miles!<br>
+                <strong>Preheader:</strong> Hasta 30% OFF este 27 de mayo.<br>
+                <strong>Lista:</strong> 12,450 contactos MCR<br>
+                <strong>Envío:</strong> 27 mayo 2026 · 10:00 AM
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════ REPORTES -->
+    <div id="view-reportes" class="view">
+      <div class="view-header">
+        <div>
+          <h1>Reportes</h1>
+          <p>Performance de campañas sincronizado desde ActiveCampaign</p>
+        </div>
+        <button class="btn btn-outline">🔄 Sincronizar desde AC</button>
+      </div>
+
+      <div class="metric-grid">
+        <div class="metric-card">
+          <span>Open Rate promedio</span>
+          <strong class="blue">26.8%</strong>
+          <small>+3.2% vs mes anterior</small>
+        </div>
+        <div class="metric-card">
+          <span>Click Rate promedio</span>
+          <strong class="green">4.1%</strong>
+          <small>+0.8% vs mes anterior</small>
+        </div>
+        <div class="metric-card">
+          <span>Bounce Rate</span>
+          <strong style="color:var(--amber)">1.3%</strong>
+          <small>Dentro del rango aceptable</small>
+        </div>
+        <div class="metric-card">
+          <span>Unsubs Rate</span>
+          <strong style="color:var(--muted)">0.4%</strong>
+          <small>Por debajo del promedio industria</small>
+        </div>
+      </div>
+
+      <div class="reports-row">
+        <div class="panel">
+          <h3>Open Rate por campaña</h3>
+          <div class="chart-bar-wrap">
+            <div class="chart-row">
+              <div class="chart-label">Día del Niño MCR</div>
+              <div class="chart-bar-bg"><div class="chart-bar-fill" style="width:89%;background:#c43a32">31.2%</div></div>
+              <div class="chart-val">31.2%</div>
+            </div>
+            <div class="chart-row">
+              <div class="chart-label">Newsletter Mayo VIS</div>
+              <div class="chart-bar-bg"><div class="chart-bar-fill" style="width:78%;background:#2f6fd6">27.4%</div></div>
+              <div class="chart-val">27.4%</div>
+            </div>
+            <div class="chart-row">
+              <div class="chart-label">Reactivación Q2 MCR</div>
+              <div class="chart-bar-bg"><div class="chart-bar-fill" style="width:74%;background:#c43a32">26.0%</div></div>
+              <div class="chart-val">26.0%</div>
+            </div>
+            <div class="chart-row">
+              <div class="chart-label">Semana Santa VIS</div>
+              <div class="chart-bar-bg"><div class="chart-bar-fill" style="width:67%;background:#2f6fd6">23.5%</div></div>
+              <div class="chart-val">23.5%</div>
+            </div>
+            <div class="chart-row">
+              <div class="chart-label">Promo Enero MCR</div>
+              <div class="chart-bar-bg"><div class="chart-bar-fill" style="width:55%;background:rgba(196,58,50,0.5)">19.3%</div></div>
+              <div class="chart-val">19.3%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Distribución por marca</h3>
+          <div class="donut-wrap">
+            <svg width="120" height="120" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="45" fill="none" stroke="#f3f6fb" stroke-width="20"/>
+              <circle cx="60" cy="60" r="45" fill="none" stroke="#c43a32" stroke-width="20"
+                stroke-dasharray="169 113" stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
+              <circle cx="60" cy="60" r="45" fill="none" stroke="#2f6fd6" stroke-width="20"
+                stroke-dasharray="113 169" stroke-dashoffset="-169" transform="rotate(-90 60 60)"/>
+              <text x="60" y="56" text-anchor="middle" font-size="16" font-weight="700" fill="#1a1a1a">32</text>
+              <text x="60" y="70" text-anchor="middle" font-size="10" fill="#666">campañas</text>
+            </svg>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div class="legend-item"><div class="legend-dot" style="background:#c43a32"></div> MCR — 18 campañas (56%)</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#2f6fd6"></div> VIS — 14 campañas (44%)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Historial de campañas enviadas</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Campaña</th>
+              <th>Marca</th>
+              <th>Fecha envío</th>
+              <th>Contactos</th>
+              <th>Open rate</th>
+              <th>Click rate</th>
+              <th>Bounces</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Día del Niño 2026</strong></td>
+              <td><span class="badge badge-mcr">MCR</span></td>
+              <td>27 May 2026</td>
+              <td>12,450</td>
+              <td><strong style="color:var(--green)">31.2%</strong></td>
+              <td>5.4%</td>
+              <td>0.8%</td>
+            </tr>
+            <tr>
+              <td><strong>Newsletter Mayo VIS</strong></td>
+              <td><span class="badge badge-vis">VIS</span></td>
+              <td>20 May 2026</td>
+              <td>8,231</td>
+              <td><strong style="color:var(--green)">27.4%</strong></td>
+              <td>3.8%</td>
+              <td>1.1%</td>
+            </tr>
+            <tr>
+              <td><strong>Reactivación Inactivos Q2</strong></td>
+              <td><span class="badge badge-mcr">MCR</span></td>
+              <td>15 May 2026</td>
+              <td>3,100</td>
+              <td>26.0%</td>
+              <td>4.2%</td>
+              <td>2.3%</td>
+            </tr>
+            <tr>
+              <td><strong>Semana Santa VIS</strong></td>
+              <td><span class="badge badge-vis">VIS</span></td>
+              <td>01 Abr 2026</td>
+              <td>9,800</td>
+              <td>23.5%</td>
+              <td>3.1%</td>
+              <td>1.4%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════ DESCRIPCIÓN -->
+    <div id="view-descripcion" class="view">
+      <div class="view-header">
+        <div>
+          <h1>Acerca del proyecto</h1>
+          <p>Campaign Email Builder — Stack tecnológico y funcionalidades</p>
+        </div>
+      </div>
+
+      <div class="insight-box" style="margin-bottom:24px">
+        <div class="ico">🚀</div>
+        <p><strong>Campaign Email Builder</strong> es una plataforma de email marketing asistida por IA, diseñada para las marcas <strong>Miles Car Rental (MCR)</strong> y <strong>Viajemos (VIS)</strong>. Permite crear, diseñar, programar y monitorear campañas de email, conectado directamente con ActiveCampaign.</p>
+      </div>
+
+      <div class="desc-grid">
+        <div class="desc-card">
+          <h4>🎨 Frontend</h4>
+          <div style="margin-bottom:10px">
+            <span class="tech-tag">React 18</span>
+            <span class="tech-tag">Vite</span>
+            <span class="tech-tag">DM Sans</span>
+            <span class="tech-tag">CSS Variables</span>
+          </div>
+          <ul>
+            <li>SPA con 8 vistas navegables sin recarga</li>
+            <li>Theming dinámico por marca (MCR rojo / VIS azul)</li>
+            <li>Editor visual de secciones de email</li>
+            <li>Preview en tiempo real del HTML del email</li>
+            <li>Responsive y optimizado para equipos de marketing</li>
+          </ul>
+        </div>
+        <div class="desc-card">
+          <h4>⚙️ Backend</h4>
+          <div style="margin-bottom:10px">
+            <span class="tech-tag">FastAPI</span>
+            <span class="tech-tag">Python 3.11</span>
+            <span class="tech-tag">PostgreSQL</span>
+            <span class="tech-tag">Pydantic</span>
+          </div>
+          <ul>
+            <li>API REST en puerto 8050 con CORS habilitado</li>
+            <li>PostgreSQL con JSONB para versionado de emails</li>
+            <li>Sincronización automática con ActiveCampaign al inicio</li>
+            <li>Pydantic v2 para validación de esquemas</li>
+            <li>Docker Compose para despliegue (db + backend + frontend)</li>
+          </ul>
+        </div>
+        <div class="desc-card">
+          <h4>🤖 Inteligencia Artificial</h4>
+          <div style="margin-bottom:10px">
+            <span class="tech-tag">GPT-4o</span>
+            <span class="tech-tag">OpenAI API</span>
+            <span class="tech-tag">DALL-E 3</span>
+          </div>
+          <ul>
+            <li>Generación de asunto, preheader y cuerpo del email</li>
+            <li>Template Lab: variaciones automáticas de plantillas</li>
+            <li>Recomendación de fechas y horas óptimas de envío</li>
+            <li>Insights basados en historial real de ActiveCampaign</li>
+            <li>Generación de imágenes con DALL-E 3 para emails</li>
+          </ul>
+        </div>
+        <div class="desc-card">
+          <h4>📡 ActiveCampaign</h4>
+          <div style="margin-bottom:10px">
+            <span class="tech-tag">AC REST API</span>
+            <span class="tech-tag">Webhooks</span>
+          </div>
+          <ul>
+            <li>Creación y envío de campañas desde la plataforma</li>
+            <li>Sincronización de historial de campañas (open/click rates)</li>
+            <li>Gestión de biblioteca de imágenes AC</li>
+            <li>Envío de emails de prueba antes del envío masivo</li>
+            <li>Análisis de historial para insights de IA</li>
+          </ul>
+        </div>
+        <div class="desc-card">
+          <h4>📧 Editor de Email</h4>
+          <div style="margin-bottom:10px">
+            <span class="tech-tag">12+ secciones</span>
+            <span class="tech-tag">HTML generado</span>
+          </div>
+          <ul>
+            <li>Banner superior, Hero, Cuerpo de texto</li>
+            <li>2 columnas con números destacados</li>
+            <li>Galería de imágenes (Grid cards)</li>
+            <li>Testimoniales y citaciones</li>
+            <li>Footer legal con links de desuscripción</li>
+            <li>Historial de versiones por campaña</li>
+          </ul>
+        </div>
+        <div class="desc-card">
+          <h4>📁 Estructura del proyecto</h4>
+          <div style="margin-bottom:10px">
+            <span class="tech-tag">Monorepo</span>
+            <span class="tech-tag">Docker</span>
+          </div>
+          <ul>
+            <li><code>src/</code> — Frontend React (views, components, lib)</li>
+            <li><code>backend/app/</code> — FastAPI (routes, services, schemas)</li>
+            <li><code>backend/app/data/</code> — Persistencia JSON local</li>
+            <li><code>docker-compose.yml</code> — Orquestación multi-contenedor</li>
+            <li>Puerto frontend: <strong>5180</strong> · Backend: <strong>8050</strong></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>🗺️ Flujo general del sistema</h3>
+        <div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;margin-top:14px">
+          <div style="text-align:center;padding:14px 20px;background:var(--surface-2);border-radius:10px;min-width:120px">
+            <div style="font-size:22px;margin-bottom:6px">👤</div>
+            <div style="font-size:12px;font-weight:600">Equipo marketing</div>
+            <div style="font-size:11px;color:var(--muted)">Crea campaña</div>
+          </div>
+          <div style="flex:1;text-align:center;color:var(--accent);font-size:18px;font-weight:700;padding:0 10px">→</div>
+          <div style="text-align:center;padding:14px 20px;background:rgba(77,157,224,0.08);border:1px solid rgba(77,157,224,0.2);border-radius:10px;min-width:120px">
+            <div style="font-size:22px;margin-bottom:6px">🤖</div>
+            <div style="font-size:12px;font-weight:600">IA (GPT-4o)</div>
+            <div style="font-size:11px;color:var(--muted)">Genera copy del email</div>
+          </div>
+          <div style="flex:1;text-align:center;color:var(--accent);font-size:18px;font-weight:700;padding:0 10px">→</div>
+          <div style="text-align:center;padding:14px 20px;background:var(--surface-2);border-radius:10px;min-width:120px">
+            <div style="font-size:22px;margin-bottom:6px">✏️</div>
+            <div style="font-size:12px;font-weight:600">Editor visual</div>
+            <div style="font-size:11px;color:var(--muted)">Diseña y ajusta</div>
+          </div>
+          <div style="flex:1;text-align:center;color:var(--accent);font-size:18px;font-weight:700;padding:0 10px">→</div>
+          <div style="text-align:center;padding:14px 20px;background:rgba(196,58,50,0.07);border-radius:10px;min-width:120px">
+            <div style="font-size:22px;margin-bottom:6px">📅</div>
+            <div style="font-size:12px;font-weight:600">Calendario IA</div>
+            <div style="font-size:11px;color:var(--muted)">Fecha óptima</div>
+          </div>
+          <div style="flex:1;text-align:center;color:var(--accent);font-size:18px;font-weight:700;padding:0 10px">→</div>
+          <div style="text-align:center;padding:14px 20px;background:rgba(61,158,101,0.08);border-radius:10px;min-width:120px">
+            <div style="font-size:22px;margin-bottom:6px">🚀</div>
+            <div style="font-size:12px;font-weight:600">ActiveCampaign</div>
+            <div style="font-size:11px;color:var(--muted)">Envío masivo</div>
+          </div>
+          <div style="flex:1;text-align:center;color:var(--accent);font-size:18px;font-weight:700;padding:0 10px">→</div>
+          <div style="text-align:center;padding:14px 20px;background:var(--surface-2);border-radius:10px;min-width:120px">
+            <div style="font-size:22px;margin-bottom:6px">📈</div>
+            <div style="font-size:12px;font-weight:600">Reportes</div>
+            <div style="font-size:11px;color:var(--muted)">Open / Click rates</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<div class="demo-tag">📊 Versión demo · datos de muestra</div>
+
+<script>
+  // ── Navigation ─────────────────────────────────────────────────────────
+  function goTo(viewId, btn) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const view = document.getElementById('view-' + viewId);
+    if (view) view.classList.add('active');
+    if (btn) btn.classList.add('active');
+  }
+
+  // ── Brand toggle ────────────────────────────────────────────────────────
+  const brands = {
+    mcr: { name: 'Miles Car Rental', color: '#c43a32' },
+    vis: { name: 'Viajemos',         color: '#2f6fd6' },
+  };
+
+  function setBrand(brand) {
+    document.getElementById('btn-mcr').classList.toggle('active', brand === 'mcr');
+    document.getElementById('btn-vis').classList.toggle('active', brand === 'vis');
+    const badge = document.getElementById('topbar-brand-name');
+    badge.textContent = brands[brand].name;
+    badge.style.background = brands[brand].color + '20';
+    badge.style.color = brands[brand].color;
+
+    // Update email preview colours for MCR vs VIS
+    const cta = document.querySelector('.email-cta');
+    const banner = document.querySelector('.email-section-banner');
+    const bigNums = document.querySelectorAll('.big-num');
+    if (cta) cta.style.background = brands[brand].color;
+    if (banner) banner.style.background = brand === 'mcr'
+      ? 'linear-gradient(135deg,#c43a32 0%,#8b1a14 100%)'
+      : 'linear-gradient(135deg,#2f6fd6 0%,#1a3a7c 100%)';
+    bigNums.forEach(n => n.style.color = brands[brand].color);
+  }
+</script>
+</body>
+</html>

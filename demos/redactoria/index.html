@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redactoria — Dashboard de Landing Pages</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; background: #f8fafc; color: #1e293b; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+    .ai-spinner { width:32px; height:32px; border:3px solid #e2e8f0; border-top-color:#6366f1; border-radius:50%; animation:spin 0.7s linear infinite; }
+    .demo-topbar {
+      position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%);
+      background: rgba(255,255,255,0.92); backdrop-filter: blur(12px);
+      border: 1px solid #e2e8f0; border-radius: 999px; padding: 8px 20px;
+      display: flex; align-items: center; gap: 12px; z-index: 200;
+      white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    }
+    .demo-topbar a { color:#3b82f6; text-decoration:none; font-size:13px; font-weight:600; display:flex; align-items:center; gap:5px; }
+    .demo-topbar a:hover { color:#1d4ed8; }
+    .demo-topbar-sep { width:1px; height:14px; background:#e2e8f0; }
+    .demo-topbar-label { font-size:12px; color:#94a3b8; font-weight:500; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useMemo, useRef } = React;
+
+// ─── SHARED DATA ─────────────────────────────────────────────────────────────
+
+const DEMO_USER = { name: "Ana García" };
+const DEMO_USERS = [
+  { id:"user-1", name:"Carlos López"  },
+  { id:"user-2", name:"María Torres"  },
+  { id:"user-3", name:"Pedro Ramírez" },
+];
+const DEMO_TEMPLATES = [
+  { id:"tpl-1", name:"LP Autos Las Vegas",     proyecto:"rentcar",      categoria:"autos",     dominio:"rentdrive.com"   },
+  { id:"tpl-2", name:"LP Autos Cancún",         proyecto:"travelhub", categoria:"autos",     dominio:"travelhub.com"         },
+  { id:"tpl-3", name:"LP Agencias Bogotá",      proyecto:"rentcar",      categoria:"agencias",  dominio:"rentdrive.com"   },
+  { id:"tpl-4", name:"LP Agencias Miami",       proyecto:"rentcar",      categoria:"agencias",  dominio:"rentdrive.com"   },
+  { id:"tpl-5", name:"LP Ciudad Barranquilla",  proyecto:"arriendo", categoria:"ciudad",    dominio:"arriendo.com.co"      },
+  { id:"tpl-6", name:"LP Ciudad México DF",     proyecto:"travelhub", categoria:"ciudad",    dominio:"travelhub.com"         },
+  { id:"tpl-7", name:"LP Localidad Miraflores", proyecto:"outlet",   categoria:"localidad", dominio:"outletrentalcars.com" },
+];
+const makeDate = (daysAgo) => { const d = new Date(); d.setDate(d.getDate()-daysAgo); return d.toISOString(); };
+const INITIAL_PROYECTOS = [
+  { id:"p-1", name:"LP Las Vegas - Alquiler de Autos",   templateId:"tpl-1", assignedTo:"user-1", status:"in_progress", priority:"high",   assignedAt:makeDate(15), lastModified:makeDate(2)  },
+  { id:"p-2", name:"LP Cancún - Autos Económicos",       templateId:"tpl-2", assignedTo:"user-2", status:"pen_review",  priority:"medium", assignedAt:makeDate(12), lastModified:makeDate(3)  },
+  { id:"p-3", name:"LP Bogotá - Agencias de Carros",     templateId:"tpl-3", assignedTo:null,     status:"review",      priority:"high",   assignedAt:null,         lastModified:makeDate(6)  },
+  { id:"p-4", name:"LP Miami - Rental Cars Agencies",    templateId:"tpl-4", assignedTo:"user-3", status:"approved",    priority:"low",    assignedAt:makeDate(25), lastModified:makeDate(8)  },
+  { id:"p-5", name:"LP Barranquilla - Arriendo Carros",  templateId:"tpl-5", assignedTo:"user-1", status:"completed",   priority:"medium", assignedAt:makeDate(30), lastModified:makeDate(10) },
+  { id:"p-6", name:"LP México DF - Turismo Viajeros",    templateId:"tpl-6", assignedTo:null,     status:"draft",       priority:"low",    assignedAt:null,         lastModified:makeDate(1)  },
+  { id:"p-7", name:"LP Miraflores - Localidad Lima",     templateId:"tpl-7", assignedTo:"user-2", status:"pen_ajuste",  priority:"high",   assignedAt:makeDate(18), lastModified:makeDate(4)  },
+  { id:"p-8", name:"LP Orlando - Car Rental Deals",      templateId:"tpl-1", assignedTo:"user-3", status:"cargue",      priority:"medium", assignedAt:makeDate(20), lastModified:makeDate(5)  },
+];
+
+// ─── REDACTOR DATA ────────────────────────────────────────────────────────────
+
+const STATUS_OPTIONS = [
+  { value:"review",          label:"Pendiente de Redacción" },
+  { value:"in_progress",     label:"En Redacción"           },
+  { value:"pen_review",      label:"Pendiente de Revisión"  },
+  { value:"pen_ajuste",      label:"Pendiente de Ajuste"    },
+  { value:"ajuste_aplicado", label:"Ajuste Aplicado"        },
+  { value:"approved",        label:"Aprobado"               },
+  { value:"rev_kws",         label:"Pendiente KWS"          },
+  { value:"cargue",          label:"Cargue"                 },
+  { value:"en_it",           label:"En IT"                  },
+  { value:"test",            label:"Test"                   },
+  { value:"completed",       label:"Publicado"              },
+];
+
+// Full content used as AI "generation" source
+const DEMO_ROWS = [
+  { id:"0-0",  block:"Bloque 1", element:"H1",                 es:"Alquiler de Autos en Las Vegas | Rent & Drive",                                                                                                   en:"Car Rental in Las Vegas | Rent & Drive",                                                                                    pt:"Aluguel de Carros em Las Vegas | Rent & Drive",                                                                             rev:"Ana García · 02/05" },
+  { id:"1-0",  block:"",         element:"Descripción H1",     es:"Descubre las mejores ofertas de alquiler de autos en Las Vegas. Reserva hoy con Rent & Drive y viaja con total libertad.",                         en:"Discover the best car rental deals in Las Vegas. Book today with Rent & Drive and travel with total freedom.",               pt:"Descubra as melhores ofertas de aluguel de carros em Las Vegas. Reserve hoje com Rent & Drive.",                            rev:"" },
+  { id:"2-0",  block:"Bloque 2", element:"H2",                 es:"Alquila un Auto en Las Vegas desde $25/día",                                                                                                          en:"Rent a Car in Las Vegas from $25/day",                                                                                          pt:"Alugue um Carro em Las Vegas a partir de $25/dia",                                                                              rev:"Ana García · 02/05" },
+  { id:"3-0",  block:"",         element:"Descripción H2",     es:"Explora la ciudad del entretenimiento con total comodidad a bordo de nuestros vehículos premium.",                                                     en:"Explore the entertainment capital of the world in total comfort with our premium vehicles.",                                      pt:"Explore a cidade do entretenimento com total conforto em nossos veículos premium.",                                              rev:"" },
+  { id:"4-0",  block:"",         element:"Texto alt (imagen)", es:"Pareja sonriente conduciendo un convertible por el Strip de Las Vegas al atardecer",                                                                   en:"Smiling couple driving a convertible along the Las Vegas Strip at sunset",                                                       pt:"Casal sorridente dirigindo um conversível pelo Strip de Las Vegas ao pôr do sol",                                               rev:"" },
+  { id:"5-0",  block:"",         element:"IP USA",             es:"¿Buscas alquiler de autos en Las Vegas, NV? ¡Tenemos la mejor flota al mejor precio!",                                                                 en:"Looking for car rental in Las Vegas, NV? We have the best fleet at the best price!",                                            pt:"",                                                                                                                              rev:"" },
+  { id:"6-0",  block:"",         element:"Texto alt (imagen)", es:"Vista panorámica del Strip de Las Vegas de noche con los casinos iluminados",                                                                           en:"Panoramic view of the Las Vegas Strip at night with illuminated casinos",                                                        pt:"Vista panorâmica do Strip de Las Vegas à noite com os cassinos iluminados",                                                     rev:"" },
+  { id:"7-0",  block:"",         element:"IP BR",              es:"",                                                                                                                                                     en:"",                                                                                                                              pt:"Alugar carro em Las Vegas nunca foi tão fácil. Reserve agora e garanta o melhor preço!",                                       rev:"" },
+  { id:"8-0",  block:"Bloque 3", element:"H2",                 es:"Cómo Alquilar un Auto en Las Vegas en 3 Pasos",                                                                                                        en:"How to Rent a Car in Las Vegas in 3 Steps",                                                                                     pt:"Como Alugar um Carro em Las Vegas em 3 Passos",                                                                                 rev:"María Torres · 01/05" },
+  { id:"9-0",  block:"",         element:"Descripción H2",     es:"Reservar tu vehículo en Rent & Drive es rápido, seguro y completamente en línea.",                                                                  en:"Booking your vehicle at Rent & Drive is fast, secure and completely online.",                                                pt:"Reservar seu veículo na Rent & Drive é rápido, seguro e completamente online.",                                             rev:"" },
+  { id:"10-0", block:"",         element:"Descripción H3",     es:"Paso 1: Elige fechas y categoría. Paso 2: Selecciona tu vehículo ideal. Paso 3: Confirma la reserva y listo.",                                          en:"Step 1: Choose dates and category. Step 2: Select your ideal vehicle. Step 3: Confirm your booking.",                           pt:"Passo 1: Escolha datas e categoria. Passo 2: Selecione seu veículo ideal. Passo 3: Confirme a reserva.",                       rev:"" },
+  { id:"11-0", block:"",         element:"Disclaimer",         es:"*Los precios pueden variar según disponibilidad y temporada. Aplican términos y condiciones.",                                                           en:"*Prices may vary depending on availability and season. Terms and conditions apply.",                                             pt:"*Os preços podem variar conforme disponibilidade e temporada. Aplicam-se termos e condições.",                                  rev:"" },
+  { id:"12-0", block:"Bloque 4", element:"H2",                 es:"Preguntas Frecuentes sobre Alquiler de Autos en Las Vegas",                                                                                             en:"Frequently Asked Questions About Car Rental in Las Vegas",                                                                      pt:"Perguntas Frequentes sobre Aluguel de Carros em Las Vegas",                                                                     rev:"" },
+  { id:"13-0", block:"",         element:"Descripción H2",     es:"Resolvemos todas tus dudas sobre el proceso de alquiler en Las Vegas.",                                                                                 en:"We answer all your questions about the car rental process in Las Vegas.",                                                        pt:"Respondemos todas as suas dúvidas sobre o processo de aluguel em Las Vegas.",                                                   rev:"" },
+  { id:"14-0", block:"",         element:"H3 FAQ",             es:"¿Qué documentos necesito para alquilar un auto en Las Vegas?",                                                                                          en:"What documents do I need to rent a car in Las Vegas?",                                                                          pt:"Quais documentos preciso para alugar um carro em Las Vegas?",                                                                   rev:"" },
+  { id:"15-0", block:"",         element:"Desc. H3 FAQ",       es:"Para alquilar un auto en Las Vegas necesitas: licencia de conducir vigente, pasaporte o documento de identidad, tarjeta de crédito a tu nombre y tener al menos 21 años.", en:"To rent a car in Las Vegas you need: a valid driver's license, passport or ID, a credit card in your name, and be at least 21 years old.", pt:"Para alugar um carro em Las Vegas você precisa: carteira de habilitação válida, passaporte ou documento de identidade, cartão de crédito e ter pelo menos 21 anos.", rev:"" },
+  { id:"16-0", block:"",         element:"H3 FAQ",             es:"¿Es posible alquilar un auto sin tarjeta de crédito?",                                                                                                  en:"Is it possible to rent a car without a credit card?",                                                                           pt:"É possível alugar um carro sem cartão de crédito?",                                                                             rev:"" },
+  { id:"17-0", block:"",         element:"Desc. H3 FAQ",       es:"La mayoría de las agencias requieren tarjeta de crédito como garantía. Algunas aceptan tarjetas de débito con requisitos adicionales.",                 en:"Most agencies require a credit card as a deposit. Some accept debit cards with additional requirements.",                        pt:"A maioria das agências exige cartão de crédito como garantia. Algumas aceitam cartões de débito com requisitos adicionais.",    rev:"" },
+  { id:"18-0", block:"",         element:"H3 FAQ",             es:"¿Cuál es la edad mínima para alquilar un auto en Las Vegas?",                                                                                           en:"What is the minimum age to rent a car in Las Vegas?",                                                                           pt:"Qual é a idade mínima para alugar um carro em Las Vegas?",                                                                      rev:"" },
+  { id:"19-0", block:"",         element:"Desc. H3 FAQ",       es:"La edad mínima es 21 años. Los conductores entre 21 y 24 años pueden estar sujetos a un cargo adicional por conductor joven.",                          en:"The minimum age is 21 years. Drivers between 21 and 24 may be subject to an additional young driver fee.",                     pt:"A idade mínima é 21 anos. Motoristas entre 21 e 24 anos podem estar sujeitos a uma taxa adicional por motorista jovem.",       rev:"" },
+  { id:"20-0", block:"",         element:"Disclaimer",         es:"*Información sujeta a cambios según políticas de cada arrendadora.",                                                                                    en:"*Information subject to change per each agency's policies.",                                                                    pt:"*Informações sujeitas a mudanças conforme as políticas de cada locadora.",                                                      rev:"" },
+  { id:"21-0", block:"Bloque 5", element:"H2",                 es:"¿Por Qué Alquilar un Auto para Explorar Las Vegas?",                                                                                                    en:"Why Rent a Car to Explore Las Vegas?",                                                                                          pt:"Por que Alugar um Carro para Explorar Las Vegas?",                                                                              rev:"" },
+  { id:"22-0", block:"",         element:"Descripción H2",     es:"Las Vegas ofrece mucho más que el Strip. Con tu propio vehículo podrás descubrir el Parque Nacional del Gran Cañón, la Represa Hoover y el Valle de la Muerte.", en:"Las Vegas offers much more than the Strip. With your own vehicle you can discover the Grand Canyon, Hoover Dam, and Death Valley.", pt:"Las Vegas oferece muito mais do que o Strip. Com seu próprio veículo você pode descobrir o Grand Canyon, a Represa Hoover e o Vale da Morte.", rev:"" },
+  { id:"23-0", block:"",         element:"H3",                 es:"Mejores Destinos Cerca de Las Vegas",                                                                                                                   en:"Best Destinations Near Las Vegas",                                                                                              pt:"Melhores Destinos Perto de Las Vegas",                                                                                          rev:"" },
+  { id:"24-0", block:"",         element:"Descripción H3",     es:"Gran Cañón (4h), Valle de la Muerte (2h), Parque Zion (2.5h), Area 51 (1.5h), Lake Mead (30min). Cada destino es una aventura única.",                  en:"Grand Canyon (4h), Death Valley (2h), Zion National Park (2.5h), Area 51 (1.5h), Lake Mead (30min).",                          pt:"Grande Cânyon (4h), Vale da Morte (2h), Parque Zion (2,5h), Área 51 (1,5h), Lago Mead (30min).",                              rev:"" },
+  { id:"25-0", block:"Bloque 6", element:"H2 CTA",             es:"Reserva tu Auto en Las Vegas Hoy y Ahorra",                                                                                                             en:"Book Your Las Vegas Car Today and Save",                                                                                        pt:"Reserve seu Carro em Las Vegas Hoje e Economize",                                                                               rev:"" },
+  { id:"26-0", block:"",         element:"Texto CTA",          es:"Aprovecha nuestras tarifas especiales y comienza tu aventura en Las Vegas con Rent & Drive. Sin cargos ocultos, sin sorpresas.",                    en:"Take advantage of our special rates and start your Las Vegas adventure with Rent & Drive. No hidden charges, no surprises.", pt:"Aproveite nossas tarifas especiais e comece sua aventura em Las Vegas com Rent & Drive. Sem cobranças ocultas.",            rev:"" },
+  { id:"27-0", block:"",         element:"Disclaimer final",   es:"*Tarifas sujetas a disponibilidad. Precio final puede incluir impuestos y cargos locales.",                                                             en:"*Rates subject to availability. Final price may include taxes and local fees.",                                                  pt:"*Tarifas sujeitas à disponibilidade. Preço final pode incluir impostos e encargos locais.",                                    rev:"" },
+];
+
+// Block membership map (each row id → block name)
+const ROW_BLOCK_MAP = (() => {
+  const m = {};
+  let cur = "";
+  DEMO_ROWS.forEach(r => { if (r.block) cur = r.block; m[r.id] = cur; });
+  return m;
+})();
+
+const AI_BLOCKS = ["Bloque 1","Bloque 2","Bloque 3","Bloque 4","Bloque 5","Bloque 6"];
+
+// ─── SHARED HELPERS ───────────────────────────────────────────────────────────
+
+const STATUS_COLOR = {
+  completed:"#10b981", in_progress:"#3b82f6", review:"#8b5cf6",
+  draft:"#6b7280",     pen_review:"#f59e0b",  pen_ajuste:"#ef4444",
+  ajuste_aplicado:"#8044ef", approved:"#059669", rev_kws:"#E3AAAA",
+  cargue:"#0ea5e9",    en_it:"#6366f1",       test:"#f97316",
+};
+const STATUS_TEXT = {
+  draft:"Borrador",           review:"Pend. Redacción",   in_progress:"En Redacción",
+  pen_review:"Pend. Revisión", pen_ajuste:"Pend. Ajuste", ajuste_aplicado:"Ajuste Aplicado",
+  approved:"Aprobado",        rev_kws:"Pend. KWS",        cargue:"Cargue",
+  en_it:"En IT",              test:"Test",                completed:"Publicado",
+};
+const PRIORITY_COLOR = { high:"#ef4444", medium:"#f59e0b", low:"#10b981" };
+const PRIORITY_TEXT  = { high:"Alta",    medium:"Media",    low:"Baja"   };
+const BLOCK_COLORS   = { "Bloque 1":"#dbeafe","Bloque 2":"#dcfce7","Bloque 3":"#fef9c3","Bloque 4":"#fce7f3","Bloque 5":"#ede9fe","Bloque 6":"#ffedd5" };
+function getCellBg(b) { return BLOCK_COLORS[b] || "white"; }
+
+const formatDate = (str) => str ? new Date(str).toLocaleDateString("es-ES") : "—";
+function getUserName(id)     { return DEMO_USERS.find(u=>u.id===id)?.name || "Sin asignar"; }
+function getUserInitials(id) { const u=DEMO_USERS.find(u=>u.id===id); if(!u) return "?"; return u.name.split(" ").map(n=>n[0]).join("").slice(0,2).toUpperCase(); }
+function getTemplateById(id) { return DEMO_TEMPLATES.find(t=>t.id===id); }
+function formatCategoria(cat){ if(!cat) return "Sin tipo"; const n=cat.toLowerCase(); if(n.includes("auto")) return "Autos"; if(n.includes("agenc")) return "Agencias"; if(n.includes("local")) return "Localidad"; if(n.includes("ciudad")) return "Ciudad"; return cat.charAt(0).toUpperCase()+cat.slice(1); }
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+
+function Toast({ msg, type }) {
+  const bg  = type==="error"?"#fee2e2":type==="info"?"#eff6ff":"#dcfce7";
+  const col = type==="error"?"#dc2626":type==="info"?"#1d4ed8":"#15803d";
+  const ic  = type==="error"?"✕":type==="info"?"ℹ":"✓";
+  return (
+    <div style={{ position:"fixed",bottom:"5rem",right:"1.5rem",zIndex:9999,background:bg,color:col,padding:"0.75rem 1.25rem",borderRadius:"0.75rem",fontWeight:600,fontSize:"0.875rem",boxShadow:"0 4px 12px rgba(0,0,0,.15)",display:"flex",alignItems:"center",gap:8,animation:"fadeIn 0.2s ease" }}>
+      {ic} {msg}
+    </div>
+  );
+}
+
+// ─── REDACTOR COMPONENTS ──────────────────────────────────────────────────────
+
+function StatusBadge({ status }) {
+  const c = STATUS_COLOR[status]||"#6b7280";
+  const label = STATUS_OPTIONS.find(s=>s.value===status)?.label||status;
+  return (
+    <div style={{ display:"inline-flex",alignItems:"center",gap:6,padding:"0.3rem 0.75rem",background:`${c}20`,color:c,borderRadius:9999,fontSize:"0.8rem",fontWeight:600,border:`1px solid ${c}40` }}>
+      <span style={{ width:7,height:7,borderRadius:"50%",background:c,display:"inline-block" }}></span>{label}
+    </div>
+  );
+}
+
+function AnnotationPanel({ cellId, existingAnnotations, onClose, onSave }) {
+  const [text, setText] = useState("");
+  const [annotations, setAnnotations] = useState(existingAnnotations||[]);
+
+  const handleAdd = () => {
+    if (!text.trim()) return;
+    const note = { id:Date.now(), text:text.trim(), author:"Ana García", date:new Date().toLocaleString("es-ES",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}) };
+    const updated = [note,...annotations];
+    setAnnotations(updated); onSave(cellId,updated); setText("");
+  };
+  const handleDelete = (id) => { const updated=annotations.filter(a=>a.id!==id); setAnnotations(updated); onSave(cellId,updated); };
+
+  return (
+    <div style={{ position:"fixed",right:"1.5rem",top:"5rem",zIndex:1001,background:"#fffbeb",border:"1px solid #f59e0b",borderRadius:"0.75rem",padding:"1rem",boxShadow:"0 8px 24px rgba(0,0,0,.15)",width:320,maxHeight:"70vh",overflowY:"auto" }}>
+      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"0.75rem",paddingBottom:"0.5rem",borderBottom:"1px solid #fbbf24" }}>
+        <h3 style={{ margin:0,fontSize:"0.875rem",fontWeight:700,color:"#92400e" }}>Anotaciones — celda {cellId}{annotations.length>0&&<span style={{ fontWeight:400,marginLeft:6 }}>({annotations.length})</span>}</h3>
+        <button onClick={onClose} style={{ background:"none",border:"none",cursor:"pointer",fontSize:"1.1rem",color:"#92400e" }}>×</button>
+      </div>
+      {annotations.length>0&&(
+        <div style={{ marginBottom:"0.75rem",display:"flex",flexDirection:"column",gap:6 }}>
+          {annotations.map((a,i)=>(
+            <div key={a.id} style={{ background:i===0?"#fef3c7":"#fffbeb",border:"1px solid #fbbf24",borderRadius:6,padding:"0.6rem 0.75rem" }}>
+              <div style={{ display:"flex",justifyContent:"space-between",marginBottom:4 }}>
+                <span style={{ fontSize:"0.72rem",color:"#b45309" }}><strong>{a.author}</strong> · {a.date}{i===0&&<span style={{ marginLeft:4,background:"#f59e0b",color:"white",padding:"0 4px",borderRadius:2,fontSize:"0.65rem" }}>RECIENTE</span>}</span>
+                <button onClick={()=>handleDelete(a.id)} style={{ background:"none",border:"none",cursor:"pointer",color:"#ef4444",fontSize:"0.8rem" }}>×</button>
+              </div>
+              <p style={{ margin:0,fontSize:"0.8rem",color:"#78350f",lineHeight:1.5 }}>{a.text}</p>
+            </div>
+          ))}
+        </div>
+      )}
+      <div>
+        <p style={{ margin:"0 0 6px 0",fontSize:"0.8rem",fontWeight:600,color:"#92400e" }}>✏️ Nueva anotación</p>
+        <textarea value={text} onChange={e=>setText(e.target.value)} placeholder="Escribe tu anotación... (Ctrl+Enter)" rows={3}
+          style={{ width:"100%",padding:"0.5rem",border:"1px solid #d97706",borderRadius:4,fontSize:"0.8rem",resize:"vertical",boxSizing:"border-box",fontFamily:"inherit" }}
+          onKeyDown={e=>{if(e.key==="Enter"&&e.ctrlKey){e.preventDefault();handleAdd();}}}/>
+        <div style={{ display:"flex",gap:8,justifyContent:"flex-end",marginTop:6 }}>
+          <button onClick={onClose} style={{ padding:"0.4rem 0.75rem",border:"1px solid #d1d5db",borderRadius:4,background:"white",cursor:"pointer",fontSize:"0.8rem" }}>Cancelar</button>
+          <button onClick={handleAdd} disabled={!text.trim()} style={{ padding:"0.4rem 0.75rem",border:"none",borderRadius:4,background:text.trim()?"#f59e0b":"#e5e7eb",color:"white",cursor:text.trim()?"pointer":"not-allowed",fontSize:"0.8rem",fontWeight:600 }}>Agregar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EditableCell({ value, onChange, lang }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const ref = useRef(null);
+  const startEdit = () => { setDraft(value); setEditing(true); setTimeout(()=>ref.current?.focus(),50); };
+  const commit = () => { onChange(draft); setEditing(false); };
+  const cancel = () => { setDraft(value); setEditing(false); };
+  const langColors = { es:"#dbeafe", en:"#dcfce7", pt:"#fef9c3" };
+  if (editing) return (
+    <textarea ref={ref} value={draft} onChange={e=>setDraft(e.target.value)} onBlur={commit}
+      onKeyDown={e=>{if(e.key==="Escape")cancel();if(e.key==="Enter"&&e.shiftKey){e.preventDefault();commit();}}}
+      rows={3} style={{ width:"100%",padding:"6px 8px",border:"2px solid #3b82f6",borderRadius:4,fontSize:"0.8rem",resize:"vertical",boxSizing:"border-box",fontFamily:"inherit",background:"white",lineHeight:1.5,minHeight:60 }}/>
+  );
+  return (
+    <div onClick={startEdit} title="Clic para editar"
+      style={{ minHeight:36,padding:"6px 8px",borderRadius:4,cursor:"text",fontSize:"0.8rem",lineHeight:1.5,color:value?"#1e293b":"#9ca3af",background:value?langColors[lang]||"transparent":"#f9fafb",border:"1px solid transparent",transition:"border-color 0.15s" }}
+      onMouseEnter={e=>e.currentTarget.style.borderColor="#93c5fd"} onMouseLeave={e=>e.currentTarget.style.borderColor="transparent"}>
+      {value||<em style={{ color:"#9ca3af" }}>Clic para redactar...</em>}
+    </div>
+  );
+}
+
+// ─── REDACTOR VIEW ────────────────────────────────────────────────────────────
+
+function RedactorView({ proyecto, onBack }) {
+  const tpl = getTemplateById(proyecto.templateId);
+
+  // Start with blank content so AI generation is visible
+  const [rows, setRows] = useState(() => DEMO_ROWS.map(r=>({...r,es:"",en:"",pt:""})));
+  const [status, setStatus]         = useState(proyecto.status);
+  const [annotations, setAnnotations] = useState({});
+  const [annotationPanel, setAnnotationPanel] = useState(null);
+  const [toast, setToast]           = useState(null);
+  const [saved, setSaved]           = useState(false);
+
+  // AI state
+  const [aiLabel, setAiLabel]       = useState(null);   // null = idle, string = generating message
+  const [aiBlock, setAiBlock]       = useState("");      // selected block for "generar bloque"
+  const [aiRowId, setAiRowId]       = useState(null);   // row being individually generated
+
+  const showToast = (msg, type="success") => { setToast({msg,type}); setTimeout(()=>setToast(null),2800); };
+
+  const handleCellChange = (rowId, field, value) => {
+    setRows(prev=>prev.map(r=>r.id===rowId?{...r,[field]:value}:r));
+    setSaved(false);
+  };
+  const handleAnnotationSave = (cellId, notes) => setAnnotations(prev=>({...prev,[cellId]:notes}));
+  const handleSave = () => { setSaved(true); showToast("Cambios guardados exitosamente"); };
+  const handleDownload = () => showToast("Descargando Excel… (simulado en demo)","info");
+  const handleStatusChange = (v) => { setStatus(v); showToast(`Estado: ${STATUS_OPTIONS.find(s=>s.value===v)?.label||v}`); };
+
+  // ── AI HELPERS ──────────────────────────────────────────────────────────────
+
+  const runAI = (label, fn, ms) => {
+    setAiLabel(label);
+    setTimeout(()=>{ fn(); setAiLabel(null); setSaved(false); }, ms);
+  };
+
+  const aiGenCompleto = () => runAI("✨ Generando contenido ES completo con IA…", () => {
+    setRows(DEMO_ROWS.map(r=>({...r,en:"",pt:""})));
+    showToast("¡Contenido ES generado correctamente!");
+  }, 2800);
+
+  const aiGenBloque = () => {
+    if (!aiBlock) return;
+    runAI(`✨ Generando ${aiBlock} con IA…`, () => {
+      setRows(prev=>prev.map(r=>{
+        if (ROW_BLOCK_MAP[r.id]===aiBlock) { const src=DEMO_ROWS.find(d=>d.id===r.id); return src?{...r,es:src.es}:r; }
+        return r;
+      }));
+      showToast(`${aiBlock} generado correctamente!`);
+    }, 1600);
+  };
+
+  const aiTraducirEN = () => runAI("🌐 Traduciendo al inglés con IA…", () => {
+    setRows(prev=>prev.map(r=>{ const src=DEMO_ROWS.find(d=>d.id===r.id); return src?{...r,en:src.en}:r; }));
+    showToast("¡Traducción al inglés completada!");
+  }, 2400);
+
+  const aiTraducirPT = () => runAI("🌐 Traduciendo al portugués con IA…", () => {
+    setRows(prev=>prev.map(r=>{ const src=DEMO_ROWS.find(d=>d.id===r.id); return src?{...r,pt:src.pt}:r; }));
+    showToast("¡Traducción al portugués completada!");
+  }, 2400);
+
+  const aiGenRow = (rowId) => {
+    setAiRowId(rowId);
+    setTimeout(()=>{
+      const src = DEMO_ROWS.find(d=>d.id===rowId);
+      if (src) setRows(prev=>prev.map(r=>r.id===rowId?{...r,es:src.es,en:src.en,pt:src.pt}:r));
+      setAiRowId(null); setSaved(false);
+      showToast("Celda generada con IA");
+    }, 1200);
+  };
+
+  const limpiarTodo = () => {
+    if (!window.confirm("¿Borrar todo el contenido? Los títulos de elemento se mantienen.")) return;
+    setRows(prev=>prev.map(r=>({...r,es:"",en:"",pt:""})));
+    setSaved(false); showToast("Contenido borrado","info");
+  };
+
+  // Row-span calculation
+  let curBlock=null, blockStart=null;
+  const blockRowSpan={};
+  rows.forEach((r,i)=>{
+    if(r.block){ if(curBlock!==null) blockRowSpan[blockStart]=i-blockStart; curBlock=r.block; blockStart=i; }
+    if(i===rows.length-1&&blockStart!==null) blockRowSpan[blockStart]=i-blockStart+1;
+  });
+
+  const sc = STATUS_COLOR[status]||"#6b7280";
+  const busy = aiLabel!==null;
+
+  // Completion stats
+  const totCells = rows.length;
+  const filledES = rows.filter(r=>r.es.trim()).length;
+  const filledEN = rows.filter(r=>r.en.trim()).length;
+  const filledPT = rows.filter(r=>r.pt.trim()).length;
+  const pctES = Math.round((filledES/totCells)*100);
+  const pctEN = Math.round((filledEN/totCells)*100);
+  const pctPT = Math.round((filledPT/totCells)*100);
+
+  const aiBtn = (onClick, label, color="#6366f1", disabled=false) => (
+    <button onClick={onClick} disabled={disabled||busy}
+      style={{ display:"flex",alignItems:"center",gap:5,padding:"0.45rem 0.9rem",background:disabled||busy?"#f1f5f9":`${color}15`,color:disabled||busy?"#94a3b8":color,border:`1px solid ${disabled||busy?"#e2e8f0":`${color}40`}`,borderRadius:6,cursor:disabled||busy?"not-allowed":"pointer",fontSize:"0.8rem",fontWeight:600,whiteSpace:"nowrap" }}>
+      {label}
+    </button>
+  );
+
+  return (
+    <div style={{ minHeight:"100vh",backgroundColor:"#f1f5f9",fontFamily:"Inter,'Segoe UI',system-ui,sans-serif" }}>
+      {toast&&<Toast msg={toast.msg} type={toast.type}/>}
+
+      {/* ── HEADER ── */}
+      <header style={{ background:"white",borderBottom:"1px solid #e2e8f0",padding:"0.75rem 2rem",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:100,boxShadow:"0 2px 4px rgba(0,0,0,.05)" }}>
+        <div style={{ display:"flex",alignItems:"center",gap:"1rem",minWidth:0 }}>
+          <button onClick={onBack} style={{ display:"flex",alignItems:"center",gap:6,padding:"0.5rem 0.875rem",background:"#f1f5f9",border:"1px solid #e2e8f0",borderRadius:"0.5rem",cursor:"pointer",fontWeight:600,color:"#475569",fontSize:"0.85rem",whiteSpace:"nowrap" }}>
+            ← Volver
+          </button>
+          <div style={{ minWidth:0 }}>
+            <h1 style={{ margin:0,fontSize:"1.1rem",fontWeight:700,color:"#0f172a",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{proyecto.name}</h1>
+            <p style={{ margin:0,fontSize:"0.75rem",color:"#64748b" }}>{tpl?`${tpl.proyecto} · ${tpl.name} · ${tpl.dominio}`:"Proyecto de demo"}</p>
+          </div>
+        </div>
+        <div style={{ display:"flex",alignItems:"center",gap:"0.75rem",flexShrink:0 }}>
+          <div style={{ background:"#fffbeb",border:"1px solid #fde68a",borderRadius:6,padding:"0.3rem 0.75rem",fontSize:"0.75rem",fontWeight:700,color:"#92400e" }}>DEMO</div>
+          <select value={status} onChange={e=>handleStatusChange(e.target.value)}
+            style={{ padding:"0.4rem 0.75rem",border:`1px solid ${sc}`,borderRadius:6,fontSize:"0.8rem",fontWeight:600,color:sc,background:`${sc}12`,cursor:"pointer" }}>
+            {STATUS_OPTIONS.map(s=><option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+          <button onClick={handleSave} style={{ display:"flex",alignItems:"center",gap:6,padding:"0.5rem 1rem",background:saved?"#10b981":"#3b82f6",color:"white",border:"none",borderRadius:"0.5rem",cursor:"pointer",fontWeight:600,fontSize:"0.85rem" }}>
+            {saved?"✓ Guardado":"💾 Guardar"}
+          </button>
+          <button onClick={handleDownload} style={{ display:"flex",alignItems:"center",gap:6,padding:"0.5rem 1rem",background:"#f1f5f9",color:"#475569",border:"1px solid #e2e8f0",borderRadius:"0.5rem",cursor:"pointer",fontWeight:600,fontSize:"0.85rem" }}>
+            ⬇ Descargar
+          </button>
+        </div>
+      </header>
+
+      {/* ── INFO BAR ── */}
+      <div style={{ background:"white",borderBottom:"1px solid #e2e8f0",padding:"0.6rem 2rem",display:"flex",gap:"2rem",alignItems:"center",flexWrap:"wrap" }}>
+        <div style={{ fontSize:"0.8rem",color:"#64748b" }}><strong style={{ color:"#374151" }}>Asignado:</strong> {getUserName(proyecto.assignedTo)}</div>
+        <div style={{ fontSize:"0.8rem",color:"#64748b",display:"flex",alignItems:"center",gap:6 }}><strong style={{ color:"#374151" }}>Estado:</strong> <StatusBadge status={status}/></div>
+        <div style={{ fontSize:"0.8rem",color:"#64748b" }}><strong style={{ color:"#374151" }}>Template:</strong> {tpl?.name||"—"}</div>
+        {/* Progress pills */}
+        <div style={{ display:"flex",gap:"0.5rem",alignItems:"center",marginLeft:"auto" }}>
+          {[["ES",pctES,"#3b82f6"],["EN",pctEN,"#10b981"],["PT",pctPT,"#f59e0b"]].map(([lang,pct,c])=>(
+            <div key={lang} title={`${lang}: ${pct}% completado`}
+              style={{ display:"flex",alignItems:"center",gap:5,padding:"0.2rem 0.6rem",background:`${c}15`,border:`1px solid ${c}40`,borderRadius:9999,fontSize:"0.72rem",fontWeight:700,color:c }}>
+              {lang} {pct}%
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ padding:"1.25rem 2rem 120px 2rem" }}>
+
+        {/* ── AI TOOLBAR ── */}
+        <div style={{ background:"white",border:"1px solid #e2e8f0",borderRadius:"0.75rem",padding:"1rem 1.25rem",marginBottom:"1rem",boxShadow:"0 1px 3px rgba(0,0,0,.06)" }}>
+          <div style={{ display:"flex",gap:"0.75rem",alignItems:"center",flexWrap:"wrap" }}>
+
+            {/* Label */}
+            <div style={{ display:"flex",alignItems:"center",gap:6,marginRight:4 }}>
+              <span style={{ fontSize:15 }}>✨</span>
+              <span style={{ fontSize:"0.82rem",fontWeight:700,color:"#374151" }}>Generación IA</span>
+            </div>
+
+            {/* Separator */}
+            <div style={{ width:1,height:26,background:"#e2e8f0" }}></div>
+
+            {/* Generar ES completo */}
+            {aiBtn(aiGenCompleto,"Generar ES completo","#6366f1")}
+
+            {/* Generar por bloque */}
+            <div style={{ display:"flex",gap:4,alignItems:"center" }}>
+              <select value={aiBlock} onChange={e=>setAiBlock(e.target.value)} disabled={busy}
+                style={{ padding:"0.42rem 0.6rem",border:"1px solid #d1d5db",borderRadius:6,fontSize:"0.8rem",fontFamily:"inherit",color:aiBlock?"#1e293b":"#94a3b8",background:"white",cursor:busy?"not-allowed":"pointer" }}>
+                <option value="">Seleccionar bloque…</option>
+                {AI_BLOCKS.map(b=><option key={b} value={b}>{b}</option>)}
+              </select>
+              {aiBtn(aiGenBloque,"Generar bloque","#8b5cf6",!aiBlock)}
+            </div>
+
+            {/* Separator */}
+            <div style={{ width:1,height:26,background:"#e2e8f0" }}></div>
+
+            {/* Traducción */}
+            <span style={{ fontSize:"0.8rem",fontWeight:700,color:"#374151" }}>🌐 Traducción IA</span>
+            {aiBtn(aiTraducirEN,"Traducir al EN","#10b981")}
+            {aiBtn(aiTraducirPT,"Traducir al PT","#f59e0b")}
+
+            {/* Separator */}
+            <div style={{ width:1,height:26,background:"#e2e8f0" }}></div>
+
+            {/* Limpiar */}
+            <button onClick={limpiarTodo} disabled={busy}
+              style={{ padding:"0.42rem 0.8rem",background:"#fff1f2",color:"#e11d48",border:"1px solid #fecdd3",borderRadius:6,cursor:busy?"not-allowed":"pointer",fontSize:"0.8rem",fontWeight:600 }}>
+              🗑 Limpiar todo
+            </button>
+
+            {/* Loading indicator */}
+            {busy && (
+              <div style={{ display:"flex",alignItems:"center",gap:8,marginLeft:"auto",background:"#f0f4ff",border:"1px solid #c7d2fe",borderRadius:6,padding:"0.4rem 0.75rem" }}>
+                <div className="ai-spinner" style={{ width:16,height:16,border:"2px solid #c7d2fe",borderTopColor:"#6366f1",borderRadius:"50%" }}></div>
+                <span style={{ fontSize:"0.78rem",fontWeight:600,color:"#4f46e5" }}>{aiLabel}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── TABLE CARD ── */}
+        <div style={{ background:"white",borderRadius:"0.75rem",boxShadow:"0 1px 6px rgba(0,0,0,.08)",border:"1px solid #e2e8f0",overflow:"hidden",position:"relative" }}>
+
+          {/* AI overlay while generating */}
+          {busy && (
+            <div style={{ position:"absolute",inset:0,background:"rgba(255,255,255,0.75)",backdropFilter:"blur(2px)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:50,gap:14 }}>
+              <div className="ai-spinner"></div>
+              <p style={{ fontSize:"0.9rem",fontWeight:600,color:"#4f46e5" }}>{aiLabel}</p>
+              <p style={{ fontSize:"0.78rem",color:"#64748b" }}>La IA está procesando el contenido…</p>
+            </div>
+          )}
+
+          {/* Legend */}
+          <div style={{ padding:"0.75rem 1.5rem",borderBottom:"1px solid #e2e8f0",background:"#f8fafc",display:"flex",gap:"1.5rem",alignItems:"center",fontSize:"0.8rem",flexWrap:"wrap" }}>
+            <span style={{ fontWeight:700,color:"#374151" }}>Leyenda:</span>
+            {[["#dbeafe","Español"],["#dcfce7","Inglés"],["#fef9c3","Portugués"]].map(([bg,lang])=>(
+              <span key={lang} style={{ display:"flex",alignItems:"center",gap:6 }}>
+                <span style={{ width:14,height:14,background:bg,border:"1px solid #d1d5db",borderRadius:3,display:"inline-block" }}></span>{lang}
+              </span>
+            ))}
+            <span style={{ marginLeft:"auto",color:"#94a3b8" }}>Shift+Enter para confirmar · Esc para cancelar · ⚡ genera esa fila con IA</span>
+          </div>
+
+          <div style={{ overflowX:"auto" }}>
+            <table style={{ width:"100%",borderCollapse:"collapse",tableLayout:"fixed" }}>
+              <colgroup>
+                <col style={{ width:90 }}/><col style={{ width:150 }}/>
+                <col style={{ width:"calc((100% - 240px - 120px - 90px) / 3)" }}/>
+                <col style={{ width:"calc((100% - 240px - 120px - 90px) / 3)" }}/>
+                <col style={{ width:"calc((100% - 240px - 120px - 90px) / 3)" }}/>
+                <col style={{ width:120 }}/><col style={{ width:90 }}/>
+              </colgroup>
+              <thead style={{ background:"#1e293b" }}>
+                <tr>
+                  {["Bloque","Elemento","🇪🇸 Español","🇬🇧 Inglés","🇧🇷 Portugués","Revisado",""].map((h,i)=>(
+                    <th key={i} style={{ padding:"0.75rem 0.875rem",textAlign:"left",fontSize:"0.75rem",fontWeight:700,color:i<5?"white":"#94a3b8",textTransform:"uppercase",letterSpacing:"0.04em",borderRight:i<6?"1px solid #334155":"none" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row,rowIdx)=>{
+                  const isBlockStart = !!row.block;
+                  const span = blockRowSpan[rowIdx];
+                  const blockBg = isBlockStart ? getCellBg(row.block) : "";
+                  const hasAnns = (annotations[row.id]||[]).length>0;
+                  const isOpen  = annotationPanel===row.id;
+                  const isGenRow = aiRowId===row.id;
+                  return (
+                    <tr key={row.id} style={{ borderBottom:"1px solid #f1f5f9",background:isGenRow?"#faf5ff":"transparent",transition:"background 0.3s" }}>
+                      {isBlockStart&&(
+                        <td rowSpan={span} style={{ padding:"0.5rem",background:blockBg,borderRight:"1px solid #e2e8f0",borderBottom:"1px solid #e2e8f0",verticalAlign:"middle",textAlign:"center" }}>
+                          <span style={{ display:"inline-block",writingMode:"vertical-rl",textOrientation:"mixed",transform:"rotate(180deg)",fontSize:"0.7rem",fontWeight:700,color:"#374151",textTransform:"uppercase",letterSpacing:"0.05em" }}>{row.block}</span>
+                        </td>
+                      )}
+                      <td style={{ padding:"0.5rem 0.75rem",background:"#fafafa",borderRight:"1px solid #e2e8f0",fontSize:"0.78rem",fontWeight:600,color:"#374151",verticalAlign:"top",whiteSpace:"nowrap" }}>{row.element}</td>
+                      <td style={{ padding:"0.5rem",borderRight:"1px solid #e2e8f0",verticalAlign:"top" }}>
+                        <EditableCell value={row.es} lang="es" onChange={v=>handleCellChange(row.id,"es",v)}/>
+                      </td>
+                      <td style={{ padding:"0.5rem",borderRight:"1px solid #e2e8f0",verticalAlign:"top" }}>
+                        <EditableCell value={row.en} lang="en" onChange={v=>handleCellChange(row.id,"en",v)}/>
+                      </td>
+                      <td style={{ padding:"0.5rem",borderRight:"1px solid #e2e8f0",verticalAlign:"top" }}>
+                        <EditableCell value={row.pt} lang="pt" onChange={v=>handleCellChange(row.id,"pt",v)}/>
+                      </td>
+                      <td style={{ padding:"0.5rem 0.75rem",borderRight:"1px solid #e2e8f0",verticalAlign:"top" }}>
+                        {row.rev?(
+                          <div style={{ display:"flex",alignItems:"center",gap:4 }}>
+                            <span style={{ color:"#10b981" }}>✓</span>
+                            <span style={{ fontSize:"0.72rem",color:"#6b7280" }}>{row.rev}</span>
+                          </div>
+                        ):(
+                          <span style={{ fontSize:"0.72rem",color:"#d1d5db" }}>—</span>
+                        )}
+                      </td>
+                      <td style={{ padding:"0.4rem",verticalAlign:"top" }}>
+                        <div style={{ display:"flex",flexDirection:"column",gap:3 }}>
+                          {/* Annotations button */}
+                          <button onClick={()=>setAnnotationPanel(isOpen?null:row.id)} title="Anotaciones"
+                            style={{ position:"relative",padding:"0.3rem",background:isOpen?"#fef3c7":hasAnns?"#fffbeb":"#f9fafb",border:`1px solid ${isOpen?"#f59e0b":hasAnns?"#fbbf24":"#e2e8f0"}`,borderRadius:4,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13 }}>
+                            💬
+                            {hasAnns&&<span style={{ position:"absolute",top:-4,right:-4,background:"#f59e0b",color:"white",borderRadius:"50%",width:14,height:14,fontSize:"0.6rem",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700 }}>{(annotations[row.id]||[]).length}</span>}
+                          </button>
+                          {/* Per-row AI button */}
+                          <button onClick={()=>aiGenRow(row.id)} title="Generar fila con IA" disabled={busy}
+                            style={{ padding:"0.3rem",background:isGenRow?"#f0f4ff":"#fafafa",border:`1px solid ${isGenRow?"#6366f1":"#e2e8f0"}`,borderRadius:4,cursor:busy?"not-allowed":"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,color:busy?"#94a3b8":"#6366f1" }}>
+                            ⚡
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ── BOTTOM ACTION BAR ── */}
+        <div style={{ background:"white",border:"1px solid #e2e8f0",borderRadius:"0.75rem",padding:"1rem 1.5rem",marginTop:"1rem",display:"flex",gap:"0.75rem",alignItems:"center",flexWrap:"wrap" }}>
+          <span style={{ fontSize:"0.8rem",color:"#64748b",fontWeight:500 }}>Cambiar estado:</span>
+          {["pen_review","approved","cargue"].map(s=>{
+            const opt=STATUS_OPTIONS.find(o=>o.value===s);
+            const c=STATUS_COLOR[s]||"#6b7280";
+            return <button key={s} onClick={()=>handleStatusChange(s)} style={{ padding:"0.4rem 0.875rem",background:`${c}15`,color:c,border:`1px solid ${c}40`,borderRadius:6,cursor:"pointer",fontSize:"0.8rem",fontWeight:600 }}>{opt?.label}</button>;
+          })}
+          <div style={{ marginLeft:"auto",display:"flex",gap:"0.75rem" }}>
+            <button onClick={handleSave} style={{ display:"flex",alignItems:"center",gap:6,padding:"0.5rem 1.25rem",background:"#3b82f6",color:"white",border:"none",borderRadius:"0.5rem",cursor:"pointer",fontWeight:700,fontSize:"0.875rem" }}>
+              💾 Guardar cambios
+            </button>
+            <button onClick={handleDownload} style={{ display:"flex",alignItems:"center",gap:6,padding:"0.5rem 1.25rem",background:"#f1f5f9",color:"#475569",border:"1px solid #e2e8f0",borderRadius:"0.5rem",cursor:"pointer",fontWeight:600,fontSize:"0.875rem" }}>
+              ⬇ Exportar Excel
+            </button>
+          </div>
+        </div>
+
+        <p style={{ textAlign:"center",color:"#94a3b8",fontSize:"0.75rem",marginTop:"1.5rem" }}>
+          Modo demo — los cambios no persisten al recargar
+        </p>
+      </div>
+
+      {annotationPanel&&(
+        <AnnotationPanel cellId={annotationPanel} existingAnnotations={annotations[annotationPanel]||[]}
+          onClose={()=>setAnnotationPanel(null)} onSave={handleAnnotationSave}/>
+      )}
+
+      <div className="demo-topbar">
+        <a href="../../index.html#proyectos">← Volver al portafolio</a>
+        <div className="demo-topbar-sep"></div>
+        <span className="demo-topbar-label">DEMO — datos de muestra</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── DASHBOARD COMPONENTS ─────────────────────────────────────────────────────
+
+function StatCard({ icon, value, label, color, bgColor }) {
+  return (
+    <div style={{ background:"white",padding:"1.5rem",borderRadius:"0.75rem",boxShadow:"0 1px 3px rgba(0,0,0,.08)",border:"1px solid #e2e8f0",flex:"1 1 180px",minWidth:180 }}>
+      <div style={{ display:"flex",alignItems:"center",gap:"0.75rem" }}>
+        <div style={{ width:"3rem",height:"3rem",backgroundColor:bgColor,borderRadius:"0.75rem",display:"flex",alignItems:"center",justifyContent:"center",color,fontSize:20 }}>{icon}</div>
+        <div>
+          <p style={{ margin:0,fontSize:"1.875rem",fontWeight:700,color:"#1e293b" }}>{value}</p>
+          <p style={{ margin:0,fontSize:"0.875rem",color:"#64748b" }}>{label}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ModalCrear({ onClose, onSave }) {
+  const [form, setForm] = useState({ name:"", template_id:"", priority:"medium" });
+  const [expanded, setExpanded] = useState(new Set());
+  const grouped = useMemo(()=>{ const g={}; DEMO_TEMPLATES.forEach(t=>{ if(!g[t.proyecto])g[t.proyecto]={}; if(!g[t.proyecto][t.dominio])g[t.proyecto][t.dominio]=[]; g[t.proyecto][t.dominio].push(t); }); return g; },[]);
+  const handleSubmit=(e)=>{ e.preventDefault(); if(!form.template_id||!form.name.trim()) return; onSave({...form,id:`p-demo-${Date.now()}`,status:"review",assignedTo:null,assignedAt:null,lastModified:new Date().toISOString(),templateId:form.template_id}); onClose(); };
+  const toggleExpand=(key)=>setExpanded(s=>{ const n=new Set(s); n.has(key)?n.delete(key):n.add(key); return n; });
+  const inputStyle={width:"100%",padding:"0.5rem 0.75rem",border:"1px solid #d1d5db",borderRadius:"0.375rem",fontSize:"0.875rem",boxSizing:"border-box",fontFamily:"inherit"};
+  const labelStyle={display:"block",fontWeight:600,marginBottom:4,fontSize:"0.875rem"};
+  return (
+    <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:20 }}>
+      <div style={{ background:"white",borderRadius:"0.75rem",padding:"2rem",width:560,maxHeight:"90vh",overflowY:"auto" }}>
+        <h2 style={{ margin:"0 0 1.5rem 0",fontSize:"1.25rem",fontWeight:700 }}>Crear Nuevo Proyecto</h2>
+        <form onSubmit={handleSubmit} style={{ display:"flex",flexDirection:"column",gap:"1rem" }}>
+          <div><label style={labelStyle}>Nombre *</label><input required value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="LP Ciudad - Tipo de página" style={inputStyle}/></div>
+          <div>
+            <label style={labelStyle}>Template *</label>
+            <div style={{ border:"1px solid #d1d5db",borderRadius:"0.375rem",maxHeight:260,overflowY:"auto" }}>
+              {Object.entries(grouped).map(([proy,dominios])=>(
+                <div key={proy} style={{ borderBottom:"1px solid #f3f4f6" }}>
+                  <div onClick={()=>toggleExpand(proy)} style={{ padding:"0.6rem 0.75rem",background:"#f8fafc",fontWeight:600,fontSize:"0.875rem",cursor:"pointer",display:"flex",justifyContent:"space-between",userSelect:"none" }}>
+                    <span>📁 {proy.toUpperCase()}</span>
+                    <span style={{ transform:expanded.has(proy)?"rotate(90deg)":"none",transition:"transform 0.15s",fontSize:"0.75rem",color:"#6b7280" }}>▶</span>
+                  </div>
+                  {expanded.has(proy)&&Object.entries(dominios).map(([dom,tpls])=>(
+                    <div key={dom} style={{ paddingLeft:"1rem" }}>
+                      <div style={{ padding:"0.4rem 0.75rem",fontSize:"0.8rem",color:"#6b7280",background:"#fafafa" }}>🌐 {dom}</div>
+                      {tpls.map(t=>(
+                        <label key={t.id} style={{ display:"flex",alignItems:"center",gap:8,padding:"0.5rem 0.75rem 0.5rem 2rem",cursor:"pointer",background:form.template_id===t.id?"#dbeafe":"transparent" }}>
+                          <input type="radio" name="template" value={t.id} checked={form.template_id===t.id} onChange={e=>setForm({...form,template_id:e.target.value})}/>
+                          <div><div style={{ fontSize:"0.875rem",fontWeight:500 }}>{t.name}</div><div style={{ fontSize:"0.75rem",color:"#6b7280" }}>{t.categoria}</div></div>
+                        </label>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+          <div><label style={labelStyle}>Prioridad</label><select value={form.priority} onChange={e=>setForm({...form,priority:e.target.value})} style={inputStyle}><option value="low">Baja</option><option value="medium">Media</option><option value="high">Alta</option></select></div>
+          <div style={{ display:"flex",gap:"0.75rem",justifyContent:"flex-end",paddingTop:"0.5rem" }}>
+            <button type="button" onClick={onClose} style={{ padding:"0.5rem 1rem",border:"1px solid #d1d5db",borderRadius:"0.375rem",background:"white",cursor:"pointer",fontFamily:"inherit" }}>Cancelar</button>
+            <button type="submit" disabled={!form.name.trim()||!form.template_id} style={{ padding:"0.5rem 1rem",border:"none",borderRadius:"0.375rem",background:(!form.name.trim()||!form.template_id)?"#94a3b8":"#3b82f6",color:"white",cursor:(!form.name.trim()||!form.template_id)?"not-allowed":"pointer",fontWeight:600,fontFamily:"inherit" }}>Crear Proyecto</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ModalEditar({ proyecto, onClose, onSave }) {
+  const [form, setForm] = useState({ status:proyecto.status, priority:proyecto.priority });
+  const ss={ width:"100%",padding:"0.5rem 0.75rem",border:"1px solid #d1d5db",borderRadius:"0.375rem",fontSize:"0.875rem",boxSizing:"border-box",fontFamily:"inherit" };
+  return (
+    <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:20 }}>
+      <div style={{ background:"white",borderRadius:"0.75rem",padding:"2rem",width:480,maxWidth:"100%" }}>
+        <h2 style={{ margin:"0 0 1.5rem 0",fontSize:"1.25rem",fontWeight:700 }}>Editar Proyecto</h2>
+        <div style={{ display:"flex",flexDirection:"column",gap:"1rem" }}>
+          <div><label style={{ display:"block",fontWeight:600,marginBottom:4,fontSize:"0.875rem" }}>Nombre</label><input value={proyecto.name} readOnly style={{ ...ss,background:"#f9fafb",color:"#6b7280" }}/></div>
+          <div><label style={{ display:"block",fontWeight:600,marginBottom:4,fontSize:"0.875rem" }}>Estado</label><select value={form.status} onChange={e=>setForm({...form,status:e.target.value})} style={ss}>{Object.entries(STATUS_TEXT).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></div>
+          <div><label style={{ display:"block",fontWeight:600,marginBottom:4,fontSize:"0.875rem" }}>Prioridad</label><select value={form.priority} onChange={e=>setForm({...form,priority:e.target.value})} style={ss}><option value="low">Baja</option><option value="medium">Media</option><option value="high">Alta</option></select></div>
+          <div style={{ display:"flex",gap:"0.75rem",justifyContent:"flex-end",paddingTop:"0.5rem" }}>
+            <button onClick={onClose} style={{ padding:"0.5rem 1rem",border:"1px solid #d1d5db",borderRadius:"0.375rem",background:"white",cursor:"pointer",fontFamily:"inherit" }}>Cancelar</button>
+            <button onClick={()=>{ onSave(proyecto.id,{...form,lastModified:new Date().toISOString()}); onClose(); }} style={{ padding:"0.5rem 1rem",border:"none",borderRadius:"0.375rem",background:"#3b82f6",color:"white",cursor:"pointer",fontWeight:600,fontFamily:"inherit" }}>Guardar Cambios</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ModalAsignar({ proyecto, onClose, onSave }) {
+  const [selected, setSelected] = useState(proyecto.assignedTo||"");
+  return (
+    <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:20 }}>
+      <div style={{ background:"white",borderRadius:"0.75rem",padding:"2rem",width:400,maxWidth:"100%" }}>
+        <h2 style={{ margin:"0 0 1rem 0",fontSize:"1.25rem",fontWeight:700 }}>Asignar Usuario</h2>
+        <p style={{ margin:"0 0 1rem 0",color:"#64748b",fontSize:"0.875rem" }}>Proyecto: <strong>{proyecto.name}</strong></p>
+        <div style={{ marginBottom:"1.5rem" }}>
+          <label style={{ display:"block",fontWeight:600,marginBottom:4,fontSize:"0.875rem" }}>Asignar a</label>
+          <select value={selected} onChange={e=>setSelected(e.target.value)} style={{ width:"100%",padding:"0.5rem 0.75rem",border:"1px solid #d1d5db",borderRadius:"0.375rem",fontSize:"0.875rem",fontFamily:"inherit" }}>
+            <option value="">Sin asignar</option>
+            {DEMO_USERS.map(u=><option key={u.id} value={u.id}>{u.name}</option>)}
+          </select>
+        </div>
+        <div style={{ display:"flex",gap:"0.75rem",justifyContent:"flex-end" }}>
+          <button onClick={onClose} style={{ padding:"0.5rem 1rem",border:"1px solid #d1d5db",borderRadius:"0.375rem",background:"white",cursor:"pointer",fontFamily:"inherit" }}>Cancelar</button>
+          <button onClick={()=>{ onSave(proyecto.id,selected||null); onClose(); }} style={{ padding:"0.5rem 1rem",border:"none",borderRadius:"0.375rem",background:"#10b981",color:"white",cursor:"pointer",fontWeight:600,fontFamily:"inherit" }}>Asignar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── ROOT APP ─────────────────────────────────────────────────────────────────
+
+function App() {
+  const [view, setView]                 = useState("dashboard");
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [proyectos, setProyectos]       = useState(INITIAL_PROYECTOS);
+  const [searchTerm, setSearchTerm]     = useState("");
+  const [filters, setFilters]           = useState({ status:"", priority:"", assignee:"" });
+  const [modalCrear, setModalCrear]     = useState(false);
+  const [modalEditar, setModalEditar]   = useState(null);
+  const [modalAsignar, setModalAsignar] = useState(null);
+  const [toast, setToast]               = useState(null);
+
+  const showToast=(msg,type="success")=>{ setToast({msg,type}); setTimeout(()=>setToast(null),2500); };
+  const handleCrear   =(p)    =>{ setProyectos(prev=>[p,...prev]); showToast("Proyecto creado exitosamente"); };
+  const handleEditar  =(id,d) =>{ setProyectos(prev=>prev.map(p=>p.id===id?{...p,...d}:p)); showToast("Cambios guardados"); };
+  const handleAsignar =(id,u) =>{ setProyectos(prev=>prev.map(p=>p.id===id?{...p,assignedTo:u,assignedAt:u?new Date().toISOString():null}:p)); showToast(u?`Asignado a ${getUserName(u)}`:"Asignación removida"); };
+  const handleEliminar=(id)   =>{ if(!window.confirm("¿Eliminar este proyecto?")) return; setProyectos(prev=>prev.filter(p=>p.id!==id)); showToast("Proyecto eliminado","error"); };
+  const openRedactor  =(p)    =>{ setSelectedProject(p); setView("redactor"); };
+
+  if (view==="redactor"&&selectedProject) return <RedactorView proyecto={selectedProject} onBack={()=>setView("dashboard")}/>;
+
+  const visible=(()=>{ let r=[...proyectos]; if(searchTerm){const q=searchTerm.toLowerCase();r=r.filter(p=>p.name.toLowerCase().includes(q));} if(filters.status)r=r.filter(p=>p.status===filters.status); if(filters.priority)r=r.filter(p=>p.priority===filters.priority); if(filters.assignee==="unassigned")r=r.filter(p=>!p.assignedTo); else if(filters.assignee)r=r.filter(p=>p.assignedTo===filters.assignee); return r.sort((a,b)=>new Date(b.lastModified)-new Date(a.lastModified)); })();
+  const stats={ total:proyectos.length, completed:proyectos.filter(p=>p.status==="completed").length, inProgress:proyectos.filter(p=>p.status!=="completed").length, unassigned:proyectos.filter(p=>!p.assignedTo).length };
+  const hayFiltros=searchTerm||Object.values(filters).some(Boolean);
+  const thStyle=(right)=>({ padding:"0.75rem 1rem",textAlign:right?"right":"left",fontSize:"0.72rem",fontWeight:600,color:"#374151",textTransform:"uppercase",letterSpacing:"0.05em",whiteSpace:"nowrap" });
+  const ss={ padding:"0.5rem 0.75rem",border:"1px solid #d1d5db",borderRadius:"0.375rem",fontSize:"0.875rem",fontFamily:"inherit",flex:"1 1 150px" };
+
+  return (
+    <div style={{ minHeight:"100vh",backgroundColor:"#f8fafc",fontFamily:"'Inter','Segoe UI',system-ui,sans-serif",paddingBottom:80 }}>
+      {toast&&<Toast msg={toast.msg} type={toast.type}/>}
+      <header style={{ backgroundColor:"white",borderBottom:"1px solid #e2e8f0",padding:"1rem 2rem",boxShadow:"0 1px 3px rgba(0,0,0,.08)",position:"sticky",top:0,zIndex:100 }}>
+        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",maxWidth:1400,margin:"0 auto" }}>
+          <div>
+            <h1 style={{ margin:0,fontSize:"1.75rem",fontWeight:700,color:"#3b82f6" }}>Dashboard Redactoria</h1>
+            <p style={{ margin:"0.25rem 0 0 0",color:"#64748b",fontSize:"0.875rem" }}>Gestiona y supervisa todos los proyectos de Landing Pages</p>
+          </div>
+          <div style={{ display:"flex",alignItems:"center",gap:"1rem" }}>
+            <div style={{ background:"#fffbeb",border:"1px solid #fde68a",borderRadius:"0.75rem",padding:"0.4rem 0.9rem",fontSize:"0.8rem",fontWeight:700,color:"#92400e" }}>DEMO — datos de muestra</div>
+            <div style={{ display:"flex",alignItems:"center",gap:"0.75rem",background:"#f1f5f9",padding:"0.5rem 1rem",borderRadius:"0.5rem" }}>
+              <div style={{ width:"2rem",height:"2rem",background:"#3b82f6",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",color:"white",fontSize:"0.8rem",fontWeight:700 }}>AG</div>
+              <div><p style={{ margin:0,fontSize:"0.875rem",fontWeight:600,color:"#1e293b" }}>{DEMO_USER.name}</p><p style={{ margin:0,fontSize:"0.75rem",color:"#64748b" }}>Administrador</p></div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div style={{ padding:"2rem",maxWidth:1400,margin:"0 auto" }}>
+        <div style={{ display:"flex",gap:"1rem",marginBottom:"2rem",flexWrap:"wrap" }}>
+          <StatCard icon="✎" value={stats.total}      label="Proyectos Totales" color="#3b82f6" bgColor="#dbeafe"/>
+          <StatCard icon="✓" value={stats.completed}  label="Publicados"        color="#3b82f6" bgColor="#dbeafe"/>
+          <StatCard icon="◷" value={stats.inProgress} label="En Proceso"        color="#f59e0b" bgColor="#fef3c7"/>
+          <StatCard icon="!" value={stats.unassigned} label="Sin Asignar"       color="#ef4444" bgColor="#fee2e2"/>
+        </div>
+
+        <div style={{ background:"white",padding:"1.25rem",borderRadius:"0.75rem",boxShadow:"0 1px 3px rgba(0,0,0,.08)",border:"1px solid #e2e8f0",marginBottom:"1.5rem" }}>
+          <div style={{ display:"flex",gap:"0.75rem",flexWrap:"wrap",alignItems:"center" }}>
+            <div style={{ position:"relative",flex:"2 1 200px" }}>
+              <span style={{ position:"absolute",left:"0.75rem",top:"50%",transform:"translateY(-50%)",color:"#64748b",fontSize:14 }}>🔍</span>
+              <input type="text" placeholder="Buscar proyectos..." value={searchTerm} onChange={e=>setSearchTerm(e.target.value)}
+                style={{ width:"100%",padding:"0.5rem 0.75rem 0.5rem 2.25rem",border:"1px solid #d1d5db",borderRadius:"0.375rem",fontSize:"0.875rem",boxSizing:"border-box",fontFamily:"inherit" }}/>
+            </div>
+            <select value={filters.status}   onChange={e=>setFilters({...filters,status:e.target.value})}   style={ss}><option value="">Todos los estados</option>{Object.entries(STATUS_TEXT).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select>
+            <select value={filters.priority} onChange={e=>setFilters({...filters,priority:e.target.value})} style={ss}><option value="">Todas las prioridades</option><option value="high">Alta</option><option value="medium">Media</option><option value="low">Baja</option></select>
+            <select value={filters.assignee} onChange={e=>setFilters({...filters,assignee:e.target.value})} style={ss}><option value="">Todos los asignados</option><option value="unassigned">Sin asignar</option>{DEMO_USERS.map(u=><option key={u.id} value={u.id}>{u.name}</option>)}</select>
+            {hayFiltros&&<button onClick={()=>{ setSearchTerm(""); setFilters({status:"",priority:"",assignee:""}); }} style={{ padding:"0.5rem 0.75rem",border:"1px solid #e2e8f0",borderRadius:"0.375rem",background:"#f8fafc",cursor:"pointer",fontSize:"0.8rem",color:"#64748b",fontFamily:"inherit" }}>Limpiar</button>}
+            <button onClick={()=>setModalCrear(true)} style={{ marginLeft:"auto",display:"flex",alignItems:"center",gap:"0.4rem",padding:"0.5rem 1rem",background:"#3b82f6",color:"white",border:"none",borderRadius:"0.375rem",cursor:"pointer",fontSize:"0.875rem",fontWeight:600,fontFamily:"inherit" }}>+ Nuevo Proyecto</button>
+          </div>
+        </div>
+
+        <div style={{ background:"white",borderRadius:"0.75rem",boxShadow:"0 1px 3px rgba(0,0,0,.08)",border:"1px solid #e2e8f0",overflow:"hidden" }}>
+          <div style={{ overflowX:"auto" }}>
+            <table style={{ width:"100%",borderCollapse:"collapse" }}>
+              <thead style={{ background:"#f8fafc" }}>
+                <tr>
+                  <th style={thStyle()}>Nombre</th><th style={thStyle()}>Template</th><th style={thStyle()}>Asignado a</th>
+                  <th style={thStyle()}>Estado</th><th style={thStyle()}>Prioridad</th><th style={thStyle()}>Fecha Asignada</th>
+                  <th style={thStyle()}>Última Modif.</th><th style={thStyle(true)}>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visible.length===0&&<tr><td colSpan={8} style={{ padding:"3rem",textAlign:"center",color:"#64748b" }}>No se encontraron proyectos.</td></tr>}
+                {visible.map((p,idx)=>{
+                  const tpl=getTemplateById(p.templateId); const sc=STATUS_COLOR[p.status]||"#6b7280";
+                  return (
+                    <tr key={p.id} style={{ borderTop:idx>0?"1px solid #f1f5f9":"none" }}>
+                      <td style={{ padding:"1rem" }}><p style={{ margin:0,fontWeight:600,color:"#1e293b",fontSize:"0.875rem" }}>{p.name}</p></td>
+                      <td style={{ padding:"1rem" }}>
+                        {tpl?(<div><p style={{ margin:0,fontSize:"0.875rem",fontWeight:600,color:"#1e293b" }}>{tpl.name}</p><div style={{ marginTop:"0.25rem",display:"flex",gap:"0.3rem",flexWrap:"wrap" }}><span style={{ fontSize:"0.7rem",fontWeight:600,color:"#1d4ed8",background:"#dbeafe",padding:"0.1rem 0.4rem",borderRadius:9999 }}>{tpl.proyecto}</span><span style={{ fontSize:"0.7rem",fontWeight:600,color:"#065f46",background:"#d1fae5",padding:"0.1rem 0.4rem",borderRadius:9999 }}>{formatCategoria(tpl.categoria)}</span></div></div>):(<span style={{ color:"#9ca3af",fontSize:"0.8rem" }}>Sin template</span>)}
+                      </td>
+                      <td style={{ padding:"1rem" }}>
+                        {p.assignedTo?(<div style={{ display:"flex",alignItems:"center",gap:8 }}><div style={{ width:28,height:28,background:"#3b82f6",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",color:"white",fontSize:"0.7rem",fontWeight:700 }}>{getUserInitials(p.assignedTo)}</div><span style={{ fontSize:"0.875rem",fontWeight:500,color:"#1e293b" }}>{getUserName(p.assignedTo)}</span></div>):(<span style={{ color:"#64748b",fontSize:"0.875rem" }}>Sin asignar</span>)}
+                      </td>
+                      <td style={{ padding:"1rem" }}><div style={{ display:"inline-flex",alignItems:"center",gap:6,padding:"0.25rem 0.6rem",background:`${sc}18`,color:sc,borderRadius:9999,fontSize:"0.75rem",fontWeight:500 }}>{STATUS_TEXT[p.status]||p.status}</div></td>
+                      <td style={{ padding:"1rem" }}><span style={{ padding:"0.2rem 0.5rem",background:`${PRIORITY_COLOR[p.priority]}18`,color:PRIORITY_COLOR[p.priority],borderRadius:4,fontSize:"0.75rem",fontWeight:500 }}>{PRIORITY_TEXT[p.priority]||p.priority}</span></td>
+                      <td style={{ padding:"1rem" }}><span style={{ fontSize:"0.875rem",color:"#64748b" }}>{formatDate(p.assignedAt)}</span></td>
+                      <td style={{ padding:"1rem" }}><span style={{ fontSize:"0.875rem",color:"#64748b" }}>{formatDate(p.lastModified)}</span></td>
+                      <td style={{ padding:"1rem",textAlign:"right" }}>
+                        <div style={{ display:"flex",justifyContent:"flex-end",gap:6 }}>
+                          <button onClick={()=>setModalEditar(p)}    title="Editar"         style={{ padding:"0.4rem 0.55rem",background:"#3b82f6",color:"white",border:"none",borderRadius:"0.375rem",cursor:"pointer",fontSize:14 }}>✎</button>
+                          <button onClick={()=>setModalAsignar(p)}   title="Asignar"        style={{ padding:"0.4rem 0.55rem",background:"#10b981",color:"white",border:"none",borderRadius:"0.375rem",cursor:"pointer",fontSize:14 }}>👤</button>
+                          <button onClick={()=>openRedactor(p)}       title="Abrir redactor" style={{ padding:"0.4rem 0.6rem",background:"#f59e0b",color:"white",border:"none",borderRadius:"0.375rem",cursor:"pointer",fontSize:13,fontWeight:700 }}>✎ Redactor</button>
+                          <button onClick={()=>handleEliminar(p.id)} title="Eliminar"       style={{ padding:"0.4rem 0.55rem",background:"#ef4444",color:"white",border:"none",borderRadius:"0.375rem",cursor:"pointer",fontSize:14 }}>🗑</button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <p style={{ textAlign:"center",color:"#94a3b8",fontSize:"0.75rem",marginTop:"1.5rem" }}>Modo demo — los datos no persisten al recargar la página</p>
+      </div>
+
+      {modalCrear   &&<ModalCrear   onClose={()=>setModalCrear(false)}    onSave={handleCrear}/>}
+      {modalEditar  &&<ModalEditar  proyecto={modalEditar}  onClose={()=>setModalEditar(null)}  onSave={handleEditar}/>}
+      {modalAsignar &&<ModalAsignar proyecto={modalAsignar} onClose={()=>setModalAsignar(null)} onSave={handleAsignar}/>}
+
+      <div className="demo-topbar">
+        <a href="../../index.html#proyectos">← Volver al portafolio</a>
+        <div className="demo-topbar-sep"></div>
+        <span className="demo-topbar-label">DEMO — datos de muestra</span>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

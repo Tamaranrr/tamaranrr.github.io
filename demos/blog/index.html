@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demo · Sistema de Gestión de Blogs</title>
+  <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.0/css/line.css" />
+  <link rel="stylesheet" href="dashboard_blog.css" />
+  <link rel="stylesheet" href="blog_generacion.css" />
+  <style>
+    .demo-topbar {
+      position: fixed;
+      bottom: 1.25rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      background: #1e293b;
+      color: #f8fafc;
+      padding: 0.55rem 1.25rem;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      white-space: nowrap;
+    }
+    .demo-topbar span { color: #fbbf24; }
+    .demo-topbar a { color: #93c5fd; text-decoration: none; font-weight: 700; }
+    .demo-topbar a:hover { text-decoration: underline; }
+  </style>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <div class="demo-topbar">
+    <span>⚡ DEMO</span>
+    Datos de muestra · sin backend real
+    <a href="../../index.html#proyectos">← Volver al portafolio</a>
+  </div>
+
+  <script type="text/babel">
+    const { useState, useMemo, useCallback, useEffect } = React;
+
+    // ═══════════════════════════════════════════════════════
+    //  DATOS COMPARTIDOS
+    // ═══════════════════════════════════════════════════════
+
+    const DEMO_USERS = [
+      { id: "user-1", name: "Ana García",   email: "ana@redactoria.com"    },
+      { id: "user-2", name: "Carlos López", email: "carlos@redactoria.com" },
+      { id: "user-3", name: "María Torres", email: "maria@redactoria.com"  },
+    ];
+
+    const INITIAL_BLOGS = [
+      { id:"blog-1", title:"Guía completa de arriendo de carros en Colombia 2024",       categoria:"Arriendo",  estado:"published", prioridad:"Alta",  assigned_to:"user-1", last_modified:"2024-05-01T10:30:00", keywords:"arriendo carros, colombia, 2024, requisitos",            idioma:"Español", tecnica:"Guía de Trámites",         tono:"Profesional",          acento:"Colombia", estimated_word_count:1450 },
+      { id:"blog-2", title:"5 destinos imperdibles para tus vacaciones en Europa",       categoria:"Viajemos",  estado:"generated", prioridad:"Alta",  assigned_to:"user-2", last_modified:"2024-05-02T14:20:00", keywords:"europa, viajes, vacaciones, turismo internacional",      idioma:"Español", tecnica:"Top y Curiosidades",        tono:"Cercano y Entusiasta", acento:"Neutral",  estimated_word_count:1280 },
+      { id:"blog-3", title:"¿Qué debes saber antes de firmar un contrato?",             categoria:"Guia legal",estado:"review",    prioridad:"Media", assigned_to:"user-3", last_modified:"2024-05-03T09:15:00", keywords:"contrato arrendamiento, derechos inquilino, colombia",   idioma:"Español", tecnica:"Explicativa Educativa",     tono:"Formal",               acento:"Neutral",  estimated_word_count:1100 },
+      { id:"blog-4", title:"Tendencias de viaje en Latinoamérica para 2025",            categoria:"Viajemos",  estado:"draft",     prioridad:"Baja",  assigned_to:null,     last_modified:"2024-05-04T16:45:00", keywords:"tendencias turismo, latinoamérica 2025",                 idioma:"Español", tecnica:"SEO Narrativo",              tono:"Inspirador",           acento:"Colombia", estimated_word_count:0    },
+      { id:"blog-5", title:"Requisitos legales para arrendar una propiedad",            categoria:"Guia legal",estado:"approved",  prioridad:"Media", assigned_to:"user-2", last_modified:"2024-04-28T11:30:00", keywords:"requisitos legales, arrendamiento, colombia",            idioma:"Español", tecnica:"Análisis de Normativas",    tono:"Analítico",            acento:"Colombia", estimated_word_count:1320 },
+      { id:"blog-6", title:"Las mejores playas del Pacífico colombiano",                categoria:"Viajemos",  estado:"published", prioridad:"Alta",  assigned_to:"user-3", last_modified:"2024-04-25T08:00:00", keywords:"playas colombia, pacífico, turismo nacional",            idioma:"Español", tecnica:"Guía de Destino",           tono:"Amigable",             acento:"Colombia", estimated_word_count:1600 },
+      { id:"blog-7", title:"Arriendo a largo plazo vs. compra de vivienda",            categoria:"Arriendo",  estado:"ajusted",   prioridad:"Media", assigned_to:"user-1", last_modified:"2024-04-22T15:20:00", keywords:"arriendo largo plazo, compra vivienda, inversión",       idioma:"Español", tecnica:"Comparativa de Precios",    tono:"Directo",              acento:"Neutral",  estimated_word_count:980  },
+      { id:"blog-8", title:"Guía legal para extranjeros que arrendan en Colombia",      categoria:"Guia legal",estado:"draft",     prioridad:"Baja",  assigned_to:null,     last_modified:"2024-04-20T10:00:00", keywords:"extranjeros colombia, arrendamiento, visa, permisos",    idioma:"Español", tecnica:"Explicativa Educativa",     tono:"Profesional",          acento:"Neutral",  estimated_word_count:0    },
+    ];
+
+    const STATUS_META = {
+      draft:     { label:"Borrador",            icon:"uil-edit-alt",     cls:"status-draft"     },
+      generated: { label:"Estructura Generada", icon:"uil-layer-group",  cls:"status-generated" },
+      review:    { label:"En Revisión",          icon:"uil-clock",        cls:"status-review"    },
+      approved:  { label:"Aprobado",             icon:"uil-check-circle", cls:"status-approved"  },
+      published: { label:"Publicado",            icon:"uil-rocket",       cls:"status-published" },
+      ajusted:   { label:"Ajustes Aplicados",    icon:"uil-sync",         cls:"status-ajusted"   },
+    };
+
+    const formatDate = (str) => {
+      if (!str) return "N/A";
+      return new Date(str).toLocaleDateString("es-ES", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+    };
+
+    const getUserName = (userId) => DEMO_USERS.find((u) => u.id === userId)?.name || "Sin asignar";
+
+    // ═══════════════════════════════════════════════════════
+    //  DATOS GENERACIÓN
+    // ═══════════════════════════════════════════════════════
+
+    const INITIAL_STRUCTURE = `[H1 - 0] 5 destinos imperdibles para tus vacaciones en Europa
+[CONTENIDO]
+Europa es un continente que nunca deja de sorprender. Desde sus majestuosas ciudades medievales hasta sus playas cristalinas del Mediterráneo, el Viejo Continente ofrece experiencias únicas para cada tipo de viajero.
+
+[H2 - 1] Barcelona: Arte, Diseño y Vida Mediterránea
+[MULTIMEDIA: FOTO | Panorámica de la Sagrada Familia al atardecer con la ciudad de fondo]
+[CONTENIDO]
+Barcelona es una ciudad que lo tiene todo. La arquitectura modernista de Antoni Gaudí, el animado barrio Gótico y las playas urbanas del Mediterráneo la convierten en un destino incomparable.
+
+[H3 - 1.1] Atracciones principales
+[CONTENIDO]
+No te vayas sin visitar la Sagrada Familia, obra maestra de Gaudí. El Parque Güell ofrece vistas panorámicas y mosaicos únicos. El barrio del Born y el Palau de la Música Catalana son imprescindibles.
+
+[H3 - 1.2] Gastronomía catalana
+[CONTENIDO]
+La cocina catalana es tan sofisticada como variada. El pan con tomate, las tapas del barrio de Gràcia y los mariscos de la Barceloneta son experiencias que no debes perderte.
+
+[H2 - 2] Praga: La Ciudad de las Cien Torres
+[CONTENIDO]
+Con su castillo medieval y el famoso Puente de Carlos del siglo XIV, Praga es un sueño para los amantes de la historia. Declarada Patrimonio de la Humanidad por la UNESCO.
+
+[H3 - 2.1] El Puente de Carlos y el Casco Histórico
+[CONTENIDO]
+El Puente de Carlos, construido en 1357, está flanqueado por 30 estatuas barrocas y ofrece vistas inigualables del río Vltava.
+
+[H2 - 3] Santorini: El Paraíso del Egeo
+[CONTENIDO]
+Las icónicas casas blancas con cúpulas azules de Oia son uno de los paisajes más fotografiados del mundo. Sus vinos Assyrtiko, cultivados en suelo volcánico, son únicos en el mundo.
+
+[H3 - 3.1] Los mejores atardeceres del mundo
+[CONTENIDO]
+El pueblo de Oia es reconocido como uno de los mejores lugares para ver el atardecer. Cada noche, cientos de turistas contemplan el sol sumergiéndose en el mar Egeo.
+
+[H2 - 4] Ámsterdam: Canales, Arte y Diversidad
+[CONTENIDO]
+La capital neerlandesa enamora con su red de 165 canales, sus 1.500 puentes y sus casas del siglo XVII. Un paraíso para amantes del arte y la historia.
+
+[H3 - 4.1] Museos de clase mundial
+[CONTENIDO]
+El Rijksmuseum alberga la colección de arte holandés más importante del mundo. El Museo Van Gogh exhibe la mayor colección del artista. La Casa de Ana Frank es una visita ineludible.
+
+[H2 - 5] Lisboa: Fado, Sol y Mar
+[CONTENIDO]
+Lisboa es quizás la capital europea más auténtica y asequible. Sus tranvías históricos y los pastéis de Belém la convierten en una ciudad con alma propia.
+
+[H2 - 6] Consejos Prácticos para tu Viaje
+[CONTENIDO]
+Viaja en temporada baja (octubre a abril) para evitar aglomeraciones. Reserva con antelación las entradas a los museos más populares.
+`;
+
+    const parseMarkdownStructure = (markdown) => {
+      if (!markdown) return [];
+      const lines = markdown.split("\n");
+      const structure = [];
+      let lastH2 = null, lastH3 = null, itemActual = null, leyendoContenido = false;
+      const structuredRegex = /^\[(H\d+)\s*-\s*([\d.]*)[\]>]\s*(.*)/i;
+      const separateMediaRegex = /^\[MULTIMEDIA:\s*(VIDEO|FOTO|MAPA|GRAFICO|IMAGEN|IMAGE)\s*\|\s*(.*?)\]\s*$/i;
+      const contentStartRegex = /^(?:\[CONTENIDO\]\s*|CONTENIDO:\s*)(.*)$/i;
+
+      for (const line of lines) {
+        const t = line.trim();
+        const mS = t.match(structuredRegex);
+        const mM = t.match(separateMediaRegex);
+        const mC = t.match(contentStartRegex);
+
+        if (mS) {
+          leyendoContenido = false;
+          const level = mS[1].toLowerCase(), enumeration = mS[2], text = mS[3].trim();
+          const newItem = { level, enumeration, text, multimedia:null, multimediaDescription:null, content:null, children:[], uniqueId:`${level}-${enumeration}` };
+          if (level === "h1") { structure.push(newItem); lastH2 = null; lastH3 = null; itemActual = newItem; }
+          else if (level === "h2") { structure.push(newItem); lastH2 = newItem; lastH3 = null; itemActual = newItem; }
+          else if (level === "h3" && lastH2) { lastH2.children.push(newItem); lastH3 = newItem; itemActual = newItem; }
+          else if (level === "h4" && lastH3) { if (!lastH3.children) lastH3.children = []; lastH3.children.push(newItem); itemActual = newItem; }
+        } else if (mM && itemActual) {
+          itemActual.multimedia = mM[1].toUpperCase(); itemActual.multimediaDescription = mM[2].trim();
+        } else if (mC) {
+          leyendoContenido = true;
+          const firstLine = mC[1].trim();
+          if (itemActual) itemActual.content = firstLine || "";
+        } else if (leyendoContenido && itemActual) {
+          if (t === "") { leyendoContenido = false; }
+          else { itemActual.content = (itemActual.content ? itemActual.content + "\n" : "") + t; }
+        }
+      }
+      if (structure.length > 0) {
+        let h2Idx = 1;
+        structure.forEach((item) => {
+          if (item.level === "h1") { item.enumeration = "0"; item.uniqueId = "h1-0"; }
+          if (item.level === "h2") {
+            const e = `${h2Idx}`; item.enumeration = e; item.uniqueId = `h2-${e}`;
+            let h3Idx = 1;
+            (item.children || []).forEach((h3) => { const e3 = `${e}.${h3Idx}`; h3.enumeration = e3; h3.uniqueId = `h3-${e3}`; h3Idx++; });
+            h2Idx++;
+          }
+        });
+      }
+      return structure;
+    };
+
+    const convertStructureToMarkdown = (structure) => {
+      let lines = []; let h2Counter = 0;
+      structure.forEach((item) => {
+        if (item.level === "h1") {
+          lines.push(`[H1 - ${item.enumeration}] ${(item.text||"").replace(/<[^>]*>/g,"")}`);
+          if (item.multimedia) lines.push(`[MULTIMEDIA: ${item.multimedia} | ${item.multimediaDescription}]`);
+          if (item.content) { lines.push("[CONTENIDO]"); lines.push(item.content); lines.push(""); }
+          return;
+        }
+        h2Counter++;
+        const h2e = `${h2Counter}`;
+        lines.push(`[H2 - ${h2e}] ${(item.text||"").replace(/<[^>]*>/g,"")}`);
+        if (item.multimedia) lines.push(`[MULTIMEDIA: ${item.multimedia} | ${item.multimediaDescription}]`);
+        if (item.content) { lines.push("[CONTENIDO]"); lines.push(item.content); lines.push(""); }
+        let h3Counter = 0;
+        (item.children || []).forEach((h3) => {
+          h3Counter++;
+          lines.push(`[H3 - ${h2e}.${h3Counter}] ${(h3.text||"").replace(/<[^>]*>/g,"")}`);
+          if (h3.content) { lines.push("[CONTENIDO]"); lines.push(h3.content); lines.push(""); }
+        });
+        if (lines[lines.length-1] !== "") lines.push("");
+      });
+      return lines.join("\n");
+    };
+
+    const contarPalabras = (texto) => {
+      if (!texto) return 0;
+      const div = document.createElement("div"); div.innerHTML = texto;
+      return ((div.textContent||div.innerText||"").replace(/\s+/g," ").trim().split(" ").filter((p) => p.length > 0)).length;
+    };
+
+    // ═══════════════════════════════════════════════════════
+    //  TOAST
+    // ═══════════════════════════════════════════════════════
+
+    const ToastNotification = ({ toast }) => {
+      if (!toast) return null;
+      const map = { success:["toast-success","uil-check-circle"], error:["toast-error","uil-times-circle"], warning:["toast-warning","uil-exclamation-triangle"], info:["toast-info","uil-info-circle"] };
+      const [cls, icon] = map[toast.type] || map.info;
+      return <div className={`toast-notification ${cls}`}><i className={`uil ${icon}`}></i><span>{toast.message}</span></div>;
+    };
+
+    // ═══════════════════════════════════════════════════════
+    //  MODALES (DASHBOARD)
+    // ═══════════════════════════════════════════════════════
+
+    function ModalCreacion({ onClose, onSave }) {
+      const [form, setForm] = useState({ title:"", categoria:"", keywords:"", idioma:"Español", prioridad:"Baja" });
+      const set = (k,v) => setForm((f) => ({...f,[k]:v}));
+      const handleSubmit = (e) => { e.preventDefault(); onSave({...form,id:`blog-demo-${Date.now()}`,estado:"draft",assigned_to:null,last_modified:new Date().toISOString(),tecnica:"",tono:"",acento:"",estimated_word_count:0}); onClose(); };
+      const inp = { width:"100%", padding:"0.6rem 0.75rem", border:"1.5px solid #cbd5e1", borderRadius:"0.5rem", fontFamily:"inherit", fontSize:"0.9rem", outline:"none" };
+      return (
+        <div className="modal-backdrop">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>Generar Idea y Borrador Inicial</h2>
+              <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:"1.4rem",color:"#64748b"}}><i className="uil uil-times"></i></button>
+            </div>
+            <form onSubmit={handleSubmit} style={{padding:"1.5rem",display:"flex",flexDirection:"column",gap:"1rem"}}>
+              <div><label style={{display:"block",fontWeight:600,marginBottom:4,fontSize:"0.875rem"}}>Título del Blog</label><input type="text" required placeholder="Ej: Tendencias de arriendo en 2024" value={form.title} onChange={(e) => set("title",e.target.value)} style={inp}/></div>
+              <div><label style={{display:"block",fontWeight:600,marginBottom:4,fontSize:"0.875rem"}}>Categoría</label>
+                <select required value={form.categoria} onChange={(e) => set("categoria",e.target.value)} style={inp}>
+                  <option value="">Seleccionar...</option><option value="Arriendo">Arriendo</option><option value="Viajemos">Viajemos</option><option value="Guia legal">Guía Legal</option>
+                </select>
+              </div>
+              <div><label style={{display:"block",fontWeight:600,marginBottom:4,fontSize:"0.875rem"}}>Keywords</label><textarea rows="2" placeholder="Separa con comas" value={form.keywords} onChange={(e) => set("keywords",e.target.value)} style={{...inp,resize:"vertical"}}/></div>
+              <div style={{display:"flex",gap:"1rem"}}>
+                <div style={{flex:1}}><label style={{display:"block",fontWeight:600,marginBottom:4,fontSize:"0.875rem"}}>Idioma</label><select value={form.idioma} onChange={(e) => set("idioma",e.target.value)} style={inp}><option value="Español">Español</option><option value="Inglés">Inglés</option><option value="Portugués">Portugués</option></select></div>
+                <div style={{flex:1}}><label style={{display:"block",fontWeight:600,marginBottom:4,fontSize:"0.875rem"}}>Prioridad</label><select value={form.prioridad} onChange={(e) => set("prioridad",e.target.value)} style={inp}><option value="Baja">Baja</option><option value="Media">Media</option><option value="Alta">Alta</option></select></div>
+              </div>
+              <div style={{display:"flex",justifyContent:"flex-end",gap:"0.75rem",paddingTop:"0.5rem"}}>
+                <button type="button" onClick={onClose} style={{padding:"0.6rem 1.25rem",border:"1.5px solid #cbd5e1",borderRadius:"0.5rem",background:"white",cursor:"pointer",fontFamily:"inherit"}}>Cancelar</button>
+                <button type="submit" disabled={!form.categoria} style={{padding:"0.6rem 1.25rem",background:"#3b82f6",color:"white",border:"none",borderRadius:"0.5rem",cursor:"pointer",fontWeight:700,fontFamily:"inherit"}}>Crear Borrador</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    function ModalEdicion({ blog, onClose, onSave }) {
+      const [form, setForm] = useState({ title:blog.title, categoria:blog.categoria, estado:blog.estado, prioridad:blog.prioridad, keywords:blog.keywords });
+      const set = (k,v) => setForm((f) => ({...f,[k]:v}));
+      const inp = { width:"100%", padding:"0.6rem 0.75rem", border:"1.5px solid #cbd5e1", borderRadius:"0.5rem", fontFamily:"inherit", fontSize:"0.9rem", outline:"none" };
+      return (
+        <div className="modal-backdrop">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>Editar Blog</h2>
+              <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:"1.4rem",color:"#64748b"}}><i className="uil uil-times"></i></button>
+            </div>
+            <div style={{padding:"1.5rem",display:"flex",flexDirection:"column",gap:"1rem"}}>
+              <div><label style={{display:"block",fontWeight:600,marginBottom:4,fontSize:"0.875rem"}}>Título</label><input type="text" value={form.title} onChange={(e) => set("title",e.target.value)} style={inp}/></div>
+              <div><label style={{display:"block",fontWeight:600,marginBottom:4,fontSize:"0.875rem"}}>Keywords</label><textarea rows="2" value={form.keywords} onChange={(e) => set("keywords",e.target.value)} style={{...inp,resize:"vertical"}}/></div>
+              <div style={{display:"flex",gap:"1rem"}}>
+                <div style={{flex:1}}><label style={{display:"block",fontWeight:600,marginBottom:4,fontSize:"0.875rem"}}>Categoría</label><select value={form.categoria} onChange={(e) => set("categoria",e.target.value)} style={inp}><option value="Arriendo">Arriendo</option><option value="Viajemos">Viajemos</option><option value="Guia legal">Guía Legal</option></select></div>
+                <div style={{flex:1}}><label style={{display:"block",fontWeight:600,marginBottom:4,fontSize:"0.875rem"}}>Estado</label><select value={form.estado} onChange={(e) => set("estado",e.target.value)} style={inp}><option value="draft">Borrador</option><option value="generated">Estructura Generada</option><option value="review">En Revisión</option><option value="approved">Aprobado</option><option value="published">Publicado</option><option value="ajusted">Ajustes Aplicados</option></select></div>
+              </div>
+              <div><label style={{display:"block",fontWeight:600,marginBottom:4,fontSize:"0.875rem"}}>Prioridad</label><select value={form.prioridad} onChange={(e) => set("prioridad",e.target.value)} style={inp}><option value="Baja">Baja</option><option value="Media">Media</option><option value="Alta">Alta</option></select></div>
+              <div style={{display:"flex",justifyContent:"flex-end",gap:"0.75rem",paddingTop:"0.5rem"}}>
+                <button onClick={onClose} style={{padding:"0.6rem 1.25rem",border:"1.5px solid #cbd5e1",borderRadius:"0.5rem",background:"white",cursor:"pointer",fontFamily:"inherit"}}>Cancelar</button>
+                <button onClick={() => { onSave(blog.id,form); onClose(); }} style={{padding:"0.6rem 1.25rem",background:"#3b82f6",color:"white",border:"none",borderRadius:"0.5rem",cursor:"pointer",fontWeight:700,fontFamily:"inherit"}}>Guardar Cambios</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function ModalAsignacion({ blog, onClose, onSave }) {
+      const [selected, setSelected] = useState(blog.assigned_to || "");
+      return (
+        <div className="modal-backdrop">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>Asignar Usuario</h2>
+              <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:"1.4rem",color:"#64748b"}}><i className="uil uil-times"></i></button>
+            </div>
+            <div style={{padding:"1.5rem",display:"flex",flexDirection:"column",gap:"1rem"}}>
+              <p style={{color:"#64748b",margin:0,fontSize:"0.875rem"}}>Blog: <strong>{blog.title}</strong></p>
+              <div><label style={{display:"block",fontWeight:600,marginBottom:4,fontSize:"0.875rem"}}>Asignar a</label>
+                <select value={selected} onChange={(e) => setSelected(e.target.value)} style={{width:"100%",padding:"0.6rem 0.75rem",border:"1.5px solid #cbd5e1",borderRadius:"0.5rem",fontFamily:"inherit"}}>
+                  <option value="">Sin asignar</option>
+                  {DEMO_USERS.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+                </select>
+              </div>
+              <div style={{display:"flex",justifyContent:"flex-end",gap:"0.75rem"}}>
+                <button onClick={onClose} style={{padding:"0.6rem 1.25rem",border:"1.5px solid #cbd5e1",borderRadius:"0.5rem",background:"white",cursor:"pointer",fontFamily:"inherit"}}>Cancelar</button>
+                <button onClick={() => { onSave(blog.id, selected||null); onClose(); }} style={{padding:"0.6rem 1.25rem",background:"#3b82f6",color:"white",border:"none",borderRadius:"0.5rem",cursor:"pointer",fontWeight:700,fontFamily:"inherit"}}>Asignar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  STRUCTURE RENDERER (GENERACIÓN)
+    // ═══════════════════════════════════════════════════════
+
+    const StructureRenderer = ({ structure, onSelect, selectedSection, onAction }) => {
+      if (!structure || structure.length === 0) return null;
+      return (
+        <ul className="structure-list">
+          {structure.map((item) => {
+            const isSelected = selectedSection?.uniqueId === item.uniqueId;
+            const isH1 = item.level === "h1";
+            return (
+              <li key={item.uniqueId} className={`structure-item structure-item-${item.level} ${isSelected?"structure-item-selected":""}`}>
+                <div className="structure-content-wrapper">
+                  <div className="structure-text-area" onClick={(e) => onSelect(item,e)}>
+                    <span className="structure-icon-wrapper">
+                      <i className={`uil ${isH1?"uil-heading":item.level==="h2"?"uil-align-left-h":item.level==="h3"?"uil-corner-down-right":"uil-list-ui-alt"}`}></i>
+                    </span>
+                    <span className="structure-enumeration">{item.enumeration}</span>
+                    <span className="structure-title-text" dangerouslySetInnerHTML={{__html:item.text||"Sin título"}} />
+                    {item.wordCount > 0 && <span className="structure-word-count">({item.wordCount} palabras)</span>}
+                  </div>
+                  {!isH1 && (
+                    <div className="structure-buttons-group">
+                      <button onClick={(e) => { e.stopPropagation(); onAction("move",item,"UP"); }} title="Mover Arriba"><i className="uil uil-arrow-up"></i></button>
+                      <button onClick={(e) => { e.stopPropagation(); onAction("move",item,"DOWN"); }} title="Mover Abajo"><i className="uil uil-arrow-down"></i></button>
+                      <button onClick={(e) => { e.stopPropagation(); onAction("delete",item); }} title="Eliminar"><i className="uil uil-trash-alt"></i></button>
+                    </div>
+                  )}
+                </div>
+                {item.content && item.content.replace(/<[^>]*>/g,"").trim().length > 0 && (
+                  <div className={`content-preview-block preview-level-${item.level}`}>
+                    <strong className="preview-content-label">CONTENIDO {item.level.toUpperCase()}:</strong>
+                    <div className="preview-content-text" dangerouslySetInnerHTML={{__html:item.content.substring(0,160)+(item.content.length>160?"...":"")}} />
+                  </div>
+                )}
+                {item.multimediaDescription && (
+                  <div className={`multimedia-recommendation-seo seo-level-${item.level}`}>
+                    <div className="seo-recommendation-header">
+                      <i className={`uil ${item.multimedia?.includes("VIDEO")?"uil-video":"uil-camera"}`}></i>
+                      <strong className="seo-recommendation-label">RECOMENDACIÓN SEO:</strong>
+                    </div>
+                    <p className="seo-recommendation-text">{item.multimediaDescription}</p>
+                  </div>
+                )}
+                {item.children && item.children.length > 0 && (
+                  <div className="structure-children-container">
+                    <StructureRenderer structure={item.children} onSelect={onSelect} selectedSection={selectedSection} onAction={onAction} />
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      );
+    };
+
+    // ═══════════════════════════════════════════════════════
+    //  VISTA DE GENERACIÓN
+    // ═══════════════════════════════════════════════════════
+
+    const DEMO_URLS = [
+      "https://www.viajeros.com/europa-destinos-imperdibles",
+      "https://www.traveler.es/viajes/articulos/destinos-europeos",
+      "https://www.lonelyplanet.com/articles/best-europe-destinations",
+    ];
+
+    function DemoBlog_Generacion({ blog: blogProp, onNavigate }) {
+      const blog = blogProp || INITIAL_BLOGS[1];
+
+      const [tablaEstructuraFinal, setTablaEstructuraFinal] = useState(INITIAL_STRUCTURE);
+      const [isDarkMode, setIsDarkMode] = useState(false);
+      const [isEditingStructure, setIsEditingStructure] = useState(true);
+      const [selectedSectionForRegen, setSelectedSectionForRegen] = useState(null);
+      const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+      const [isSaving, setIsSaving] = useState(false);
+      const [blogStatus, setBlogStatus] = useState(blog.estado);
+      const [blogPriority, setBlogPriority] = useState(blog.prioridad);
+      const [toast, setToast] = useState(null);
+      const [contentType, setContentType] = useState("ia_libre");
+      const [cardVisibility, setCardVisibility] = useState({ preconfiguracionUnificada: false });
+      const [cargandoIA, setCargandoIA] = useState(false);
+      const [cargandoScraping, setCargandoScraping] = useState(false);
+      const [googleFaqs, setGoogleFaqs] = useState([]);
+      const [loadingFaqs, setLoadingFaqs] = useState(false);
+      const [regenTextareaValue, setRegenTextareaValue] = useState("");
+      const [sectionContentValue, setSectionContentValue] = useState("");
+
+      const showToast = (message, type="info") => { setToast({message,type}); setTimeout(() => setToast(null), 3000); };
+      const markAsChanged = useCallback(() => setHasUnsavedChanges(true), []);
+
+      useEffect(() => {
+        document.body.style.backgroundColor = isDarkMode ? "#0f172a" : "";
+        return () => { document.body.style.backgroundColor = ""; };
+      }, [isDarkMode]);
+
+      const structureWithCount = useMemo(() => {
+        const arr = parseMarkdownStructure(tablaEstructuraFinal);
+        if (!arr || arr.length === 0) return [];
+        const processLevel = (item) => ({ ...item, wordCount:contarPalabras(item.content||""), children:(item.children||[]).map(processLevel) });
+        return arr.map(processLevel);
+      }, [tablaEstructuraFinal]);
+
+      const totalGeneratedWords = useMemo(() => {
+        const countAll = (items) => items.reduce((acc,item) => acc+contarPalabras(item.content||"")+countAll(item.children||[]), 0);
+        return countAll(structureWithCount);
+      }, [structureWithCount]);
+
+      const seleccionarSeccionEdicion = (section) => {
+        setSelectedSectionForRegen(section);
+        setRegenTextareaValue(section.text?.replace(/<[^>]*>/g,"") || "");
+        setSectionContentValue(section.content || "");
+      };
+
+      const guardarCambiosTitulo = () => {
+        if (!selectedSectionForRegen || !regenTextareaValue.trim()) { showToast("El título está vacío.","error"); return; }
+        let e = parseMarkdownStructure(tablaEstructuraFinal);
+        const { level, enumeration } = selectedSectionForRegen;
+        const parts = enumeration.split(".");
+        if (level === "h1") { const h1 = e.find((i) => i.level === "h1"); if (h1) h1.text = regenTextareaValue; }
+        else {
+          const h2 = e.find((i) => i.enumeration === parts[0]);
+          if (h2 && level === "h2") h2.text = regenTextareaValue;
+          else if (h2 && level === "h3") { const h3 = h2.children?.find((c) => c.enumeration === enumeration); if (h3) h3.text = regenTextareaValue; }
+        }
+        setTablaEstructuraFinal(convertStructureToMarkdown(e));
+        setSelectedSectionForRegen((prev) => ({ ...prev, text:regenTextareaValue }));
+        markAsChanged(); showToast("Título guardado.","success");
+      };
+
+      const guardarContenidoLocal = () => {
+        if (!selectedSectionForRegen) return;
+        let e = parseMarkdownStructure(tablaEstructuraFinal);
+        const { level, enumeration } = selectedSectionForRegen;
+        const parts = enumeration.split(".");
+        if (level === "h1") { const h1 = e.find((i) => i.level === "h1"); if (h1) h1.content = sectionContentValue; }
+        else {
+          const h2 = e.find((i) => i.enumeration === parts[0]);
+          if (h2 && level === "h2") h2.content = sectionContentValue;
+          else if (h2 && level === "h3") { const h3 = h2.children?.find((c) => c.enumeration === enumeration); if (h3) h3.content = sectionContentValue; }
+        }
+        setTablaEstructuraFinal(convertStructureToMarkdown(e));
+        setSelectedSectionForRegen(null); markAsChanged(); showToast("Contenido guardado.","success");
+      };
+
+      const moverSeccion = (section, direction) => {
+        let e = parseMarkdownStructure(tablaEstructuraFinal);
+        const level = section.level, parts = section.enumeration.split(".");
+        if (level === "h2") {
+          const idx = e.findIndex((i) => i.uniqueId === section.uniqueId);
+          if (idx <= 0) return;
+          const newIdx = direction === "UP" ? idx-1 : idx+1;
+          if (newIdx < 1 || newIdx >= e.length) return;
+          const [moved] = e.splice(idx,1); e.splice(newIdx,0,moved);
+        } else if (level === "h3") {
+          const h2 = e.find((i) => i.enumeration === parts[0]); if (!h2) return;
+          const idx = h2.children.findIndex((i) => i.uniqueId === section.uniqueId);
+          const newIdx = direction === "UP" ? idx-1 : idx+1;
+          if (idx === -1 || newIdx < 0 || newIdx >= h2.children.length) return;
+          const [moved] = h2.children.splice(idx,1); h2.children.splice(newIdx,0,moved);
+        }
+        setTablaEstructuraFinal(convertStructureToMarkdown(e)); markAsChanged();
+        showToast(`Sección movida ${direction==="UP"?"arriba":"abajo"}.`,"info");
+      };
+
+      const eliminarSeccion = (section) => {
+        if (!window.confirm(`¿Eliminar "${section.text?.replace(/<[^>]*>/g,"")}"`)) return;
+        let e = parseMarkdownStructure(tablaEstructuraFinal);
+        const level = section.level, parts = section.enumeration.split(".");
+        if (level === "h1" || level === "h2") { e = e.filter((i) => i.uniqueId !== section.uniqueId); }
+        else if (level === "h3") { e = e.map((h2) => h2.enumeration === parts[0] ? {...h2,children:h2.children.filter((h3) => h3.uniqueId !== section.uniqueId)} : h2); }
+        setTablaEstructuraFinal(convertStructureToMarkdown(e)); setSelectedSectionForRegen(null); markAsChanged(); showToast("Sección eliminada.","success");
+      };
+
+      const gestionarAccionDeSeccion = (action, section, direction=null) => {
+        if (action === "move") moverSeccion(section, direction);
+        if (action === "delete") eliminarSeccion(section);
+      };
+
+      const agregarSeccionH2 = () => {
+        const e = parseMarkdownStructure(tablaEstructuraFinal);
+        e.push({id:`new-${Date.now()}`,text:"Nuevo Título de Sección (H2)",level:"h2",enumeration:"0",multimedia:null,multimediaDescription:null,content:null,children:[]});
+        setTablaEstructuraFinal(convertStructureToMarkdown(e)); markAsChanged(); showToast("Sección H2 añadida.","success");
+      };
+
+      const agregarSubseccionH3 = () => {
+        if (!selectedSectionForRegen) { showToast("Selecciona un H2 primero.","error"); return; }
+        const e = parseMarkdownStructure(tablaEstructuraFinal);
+        const idH2 = selectedSectionForRegen.enumeration.split(".")[0];
+        const h2 = e.find((i) => i.enumeration === idH2);
+        if (!h2) { showToast("No se encontró el H2 padre.","error"); return; }
+        h2.children.push({level:"h3",uniqueId:`h3-${Date.now()}`,text:"Nueva Subsección H3",multimedia:null,multimediaDescription:null,content:null,children:[]});
+        setTablaEstructuraFinal(convertStructureToMarkdown(e)); markAsChanged(); showToast("Subsección H3 agregada.","success");
+      };
+
+      const guardarArticulo = async () => {
+        if (isSaving) return; setIsSaving(true);
+        await new Promise((r) => setTimeout(r,900));
+        setIsSaving(false); setHasUnsavedChanges(false); showToast("¡Proyecto guardado!","success");
+      };
+
+      const limpiarTodoElContenido = () => {
+        if (!window.confirm("¿Borrar TODO el contenido generado?")) return;
+        const e = parseMarkdownStructure(tablaEstructuraFinal);
+        const clean = (items) => items.map((i) => ({...i,content:null,children:clean(i.children||[])}));
+        setTablaEstructuraFinal(convertStructureToMarkdown(clean(e))); markAsChanged(); showToast("Contenido borrado.","success");
+      };
+
+      const generarEsquemaDelArticulo = async () => {
+        setCargandoIA(true); setTablaEstructuraFinal("");
+        await new Promise((r) => setTimeout(r,2000));
+        setTablaEstructuraFinal(INITIAL_STRUCTURE.split("\n").filter((l) => !l.includes("[CONTENIDO]") && !l.match(/^[A-ZÁÉÍÓÚ]/)).join("\n").trim());
+        setCargandoIA(false); markAsChanged(); showToast("✨ Estructura generada correctamente.","success");
+      };
+
+      const generarContenidoCompleto = async () => {
+        setCargandoIA(true); showToast("Iniciando generación de contenido...","info");
+        await new Promise((r) => setTimeout(r,3000));
+        setTablaEstructuraFinal(INITIAL_STRUCTURE); setCargandoIA(false); markAsChanged(); showToast("¡Blog generado correctamente!","success");
+      };
+
+      const generarContenidoSeccion = async () => {
+        if (!selectedSectionForRegen) { showToast("Selecciona una sección primero.","error"); return; }
+        setCargandoIA(true);
+        await new Promise((r) => setTimeout(r,1500));
+        const fakeContent = `Contenido generado automáticamente para la sección "${selectedSectionForRegen.text?.replace(/<[^>]*>/g,"")}". Este párrafo fue creado con IA usando las fuentes de referencia y los parámetros configurados (técnica: ${blog.tecnica}, tono: ${blog.tono}).`;
+        setSectionContentValue(fakeContent); setCargandoIA(false); showToast("Contenido de sección generado.","success");
+      };
+
+      const regenerarSeccion = async () => {
+        setCargandoIA(true); await new Promise((r) => setTimeout(r,1200));
+        setRegenTextareaValue(`Descubre ${selectedSectionForRegen?.text?.replace(/<[^>]*>/g,"")}`);
+        setCargandoIA(false); showToast("Título regenerado (demo).","success");
+      };
+
+      const generarFaqsDesdeEstructura = async () => {
+        setLoadingFaqs(true); await new Promise((r) => setTimeout(r,1800));
+        setGoogleFaqs(["¿Cuál es el mejor momento para viajar a Europa?","¿Cuánto dinero necesito para Barcelona?","¿Es Santorini cara para latinoamericanos?","¿Qué visa necesito desde Colombia para Europa?","¿Cómo moverse entre ciudades europeas sin gastar mucho?"]);
+        setLoadingFaqs(false); showToast("FAQs generadas con IA.","success");
+      };
+
+      const renderizarContenidoDelBlog = (structure) => {
+        if (!structure || structure.length === 0) return <div className="blog-view-placeholder"><p>Aún no hay contenido generado.</p></div>;
+        const hasContent = (html) => html && html.replace(/<[^>]*>/g,"").replace(/&nbsp;/g,"").trim().length > 0;
+        return (
+          <div className="tiptap-render">
+            {structure.map((item) => (
+              <React.Fragment key={item.uniqueId}>
+                {hasContent(item.text) && <div className={item.level==="h1"?"blog-title":"section-h2"} dangerouslySetInnerHTML={{__html:item.text}} />}
+                {hasContent(item.content) && <div className="content-block" dangerouslySetInnerHTML={{__html:item.content}} />}
+                {(item.children||[]).map((h3) => (
+                  <React.Fragment key={h3.uniqueId}>
+                    {hasContent(h3.text) && <div className="subsection-h3" dangerouslySetInnerHTML={{__html:h3.text}} />}
+                    {hasContent(h3.content) && <div className="content-block" dangerouslySetInnerHTML={{__html:h3.content}} />}
+                  </React.Fragment>
+                ))}
+              </React.Fragment>
+            ))}
+          </div>
+        );
+      };
+
+      const inp = { padding:"0.3rem 0.5rem", border:"1px solid #cbd5e1", borderRadius:"0.4rem", fontSize:"0.8rem", fontFamily:"inherit", outline:"none" };
+
+      return (
+        <>
+          <ToastNotification toast={toast} />
+          <div className={`blog-generation-page ${isDarkMode?"dark-mode":""}`}>
+
+            <header className="navbar-custom">
+              <div className="header-brand">
+                <h1>Generación <span>Blogs</span></h1>
+                <p>Sistema de gestión de contenido &nbsp;·&nbsp; <span style={{color:"#f59e0b",fontWeight:700}}>DEMO</span></p>
+              </div>
+              <div className="header-actions">
+                <a href="#" onClick={(e) => { e.preventDefault(); onNavigate("dashboard"); }} className="nav-link nav-link-dashboard">
+                  <i className="uil uil-dashboard" style={{fontSize:"1.1rem"}}></i>
+                  <span>Dashboard Blog</span>
+                </a>
+                <button onClick={() => setIsDarkMode(!isDarkMode)} className="btn-mode-toggle" title={isDarkMode?"Modo Claro":"Modo Oscuro"}>
+                  <i className={`uil ${isDarkMode?"uil-sun":"uil-moon"}`}></i>
+                </button>
+                <div className="user-pill">
+                  <div className="user-avatar">{getUserName(blog.assigned_to)?.[0]}{getUserName(blog.assigned_to)?.split(" ")[1]?.[0]}</div>
+                  <div className="user-info">
+                    <span className="user-name">{getUserName(blog.assigned_to)}</span>
+                    <span className="user-role">Editor</span>
+                  </div>
+                </div>
+              </div>
+            </header>
+
+            <section className="preconfig" style={{maxWidth:1440,margin:"1.5rem auto 0",padding:"1.25rem 2rem"}}>
+              <div className="analysis-title" style={{display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"2px solid #e0e6ec",paddingBottom:10,marginBottom:16}}>
+                <h2 style={{color:"#007bff",margin:0,fontSize:"1.1rem"}}>Fuentes de Referencia · <span style={{fontSize:"0.82rem",fontWeight:500,color:"#64748b"}}>{blog.title}</span></h2>
+                <button type="button" className="btn-remove-url" style={{background:"#e8f5e9",color:"#28a745",border:"1px solid #c8e6c9",fontSize:16}} title="Añadir URL (demo)">+</button>
+              </div>
+              <div className="config-cards-wrapper">
+                {DEMO_URLS.map((url,i) => (
+                  <div key={i} className="url-container">
+                    <div className="url-input-group">
+                      <input type="text" value={url} readOnly className="auto-expand exito" />
+                      <button type="button" className="btn-remove-url" disabled title="Eliminar URL">✕</button>
+                    </div>
+                    <div className="url-status-label"><span className="status-text success">✅ Analizado</span></div>
+                  </div>
+                ))}
+              </div>
+              <div style={{marginTop:16}}>
+                <button onClick={() => { setCargandoScraping(true); showToast("Simulando análisis...","info"); setTimeout(() => { setCargandoScraping(false); showToast("Fuentes analizadas (demo).","success"); },1800); }} className={`btn-generate ${cargandoScraping?"btn-cancel":""}`} disabled={cargandoScraping} style={{maxWidth:200}}>
+                  {cargandoScraping ? "Analizando..." : "Analizar Google"}
+                </button>
+              </div>
+            </section>
+
+            <section className="analysis-result info-card" style={{maxWidth:1440,margin:"1rem auto 0",padding:"0 2rem"}}>
+              <div style={{background:"white",borderRadius:12,border:"1px solid #e2e8f0",padding:"1rem 1.5rem"}}>
+                <h2 className="analysis-title collapsable-header" onClick={() => setCardVisibility((v) => ({...v,preconfiguracionUnificada:!v.preconfiguracionUnificada}))}>
+                  <div style={{display:"flex",alignItems:"center",gap:"0.5rem"}}><i className="uil uil-setting"></i><span>Parámetros de Generación</span></div>
+                  <i className={`uil ${cardVisibility.preconfiguracionUnificada?"uil-angle-up":"uil-angle-down"}`}></i>
+                </h2>
+                {cardVisibility.preconfiguracionUnificada && (
+                  <div className="config-cards-wrapper">
+                    <div className="project-header-group">
+                      <span className="status-text pending">TÍTULO DEL PROYECTO</span>
+                      <p className="project-display-title">{blog.title}</p>
+                    </div>
+                    <div className="config-grid-layout">
+                      <div className="log-card">
+                        <span className="analysis-title" style={{fontSize:"0.82rem",marginBottom:4}}><i className="uil uil-key-skeleton"></i> Keywords</span>
+                        <div className="keywords-flex-container">
+                          {blog.keywords.split(",").map((k,i) => k.trim() && <span key={i} className="keyword-tag">{k.trim()}</span>)}
+                        </div>
+                      </div>
+                      <div className="log-card">
+                        <span className="analysis-title" style={{fontSize:"0.82rem",marginBottom:4}}><i className="uil uil-globe"></i> Regional</span>
+                        <div className="regional-config-list">
+                          <div className="config-item"><span className="label">Idioma:</span><span className="count-badge remaining">{blog.idioma}</span></div>
+                          <div className="config-item"><span className="label">Categoría:</span><span className="count-badge total">{blog.categoria}</span></div>
+                          <div className="config-item"><span className="label">Técnica:</span><span className="count-badge remaining">{blog.tecnica}</span></div>
+                          <div className="config-item"><span className="label">Tono:</span><span className="count-badge total">{blog.tono}</span></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            <div className="generadores-container">
+
+              {/* ── COLUMNA IZQUIERDA ── */}
+              <div className="generadores-izquierda">
+                {tablaEstructuraFinal && (
+                  <>
+                    <div style={{marginBottom:12,display:"flex",gap:10}}>
+                      {cargandoIA ? (
+                        <button onClick={() => setCargandoIA(false)} className="btn-regenerar"><i className="uil uil-times-circle"></i> Cancelar</button>
+                      ) : (
+                        <>
+                          <button onClick={generarEsquemaDelArticulo} className="btn-estructura" disabled={cargandoIA}>Regenerar Estructura (IA)</button>
+                          <button onClick={generarContenidoCompleto} className="btn-contenido" disabled={cargandoIA}>Generar Contenido COMPLETO</button>
+                        </>
+                      )}
+                    </div>
+                    <div style={{marginBottom:12,display:"flex",gap:10}}>
+                      <button onClick={limpiarTodoElContenido} className="btn-estructura" style={{flex:1,background:"#fef2f2",color:"#dc2626",borderColor:"#fecaca"}}>
+                        <i className="uil uil-trash-alt"></i> Borrar Todo
+                      </button>
+                      <button className={`btn-estructura ${hasUnsavedChanges&&!isSaving?"btn-active-save":"btn-disabled"}`} onClick={guardarArticulo} disabled={isSaving||!hasUnsavedChanges} style={{flex:1}}>
+                        {isSaving ? <><i className="uil uil-spinner"></i> Guardando...</> : <><i className="uil uil-save"></i> Guardar</>}
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                <div className="add-section-controls">
+                  <button onClick={agregarSeccionH2} className="btn-add-h2" disabled={!tablaEstructuraFinal}><i className="uil uil-plus-circle"></i> Agregar H2</button>
+                  <button onClick={agregarSubseccionH3} className="btn-add-h3" disabled={!selectedSectionForRegen||!tablaEstructuraFinal}><i className="uil uil-plus-circle"></i> Agregar H3</button>
+                  <button className="btn-add-h4" disabled><i className="uil uil-plus-circle"></i> Agregar H4</button>
+                </div>
+
+                {tablaEstructuraFinal && (
+                  <div className="analysis-result fade-in" style={{marginTop:8}}>
+                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:12,alignItems:"center"}}>
+                      <h2 className="analysis-title" style={{margin:0}}>Preguntas Frecuentes (FAQs)</h2>
+                      <button className="btn-generate" onClick={generarFaqsDesdeEstructura} disabled={loadingFaqs} style={{width:"auto",padding:"0.45rem 0.9rem"}}>
+                        {loadingFaqs ? "Generando..." : "Generar con IA"}
+                      </button>
+                    </div>
+                    {googleFaqs.length > 0 && (
+                      <ul style={{listStyle:"none",padding:0,display:"flex",flexDirection:"column",gap:6}}>
+                        {googleFaqs.map((faq,i) => (
+                          <li key={i} style={{background:"#f0f9ff",border:"1px solid #bae6fd",borderRadius:"0.5rem",padding:"0.5rem 0.9rem",fontSize:"0.83rem",color:"#0369a1",display:"flex",alignItems:"flex-start",gap:"0.4rem"}}>
+                            <i className="uil uil-question-circle" style={{marginTop:1,flexShrink:0}}></i>{faq}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+
+                <div className="analysis-result fade-in" style={{marginTop:8}}>
+                  {selectedSectionForRegen ? (
+                    <>
+                      <h2 className="analysis-title">
+                        Editar: "{selectedSectionForRegen.text?.replace(/<[^>]*>/g,"").substring(0,35)}..." ({selectedSectionForRegen.level.toUpperCase()})
+                      </h2>
+                      <p className="result-text">Edita el texto directamente o usa IA para regenerar el título.</p>
+                      <div className="regen-input-area">
+                        <div className="tiptap-container titulo-editor">
+                          <div style={{borderBottom:"1px solid #e2e8f0",padding:"6px 8px",background:"#f8fafc",display:"flex",gap:4,flexWrap:"wrap"}}>
+                            {["B","I","U","H2","H3","🔗"].map((t,i) => <button key={i} type="button" style={{padding:"2px 8px",border:"1px solid #e2e8f0",borderRadius:4,background:"white",cursor:"default",fontSize:"0.75rem",color:"#64748b"}}>{t}</button>)}
+                          </div>
+                          <textarea value={regenTextareaValue} onChange={(e) => setRegenTextareaValue(e.target.value)} rows={3} style={{width:"100%",padding:"0.75rem",border:"none",outline:"none",resize:"vertical",fontFamily:"inherit",fontSize:"0.9rem"}} placeholder="Edita el título aquí..."/>
+                        </div>
+                      </div>
+                      <div className="idea-buttons">
+                        <button onClick={guardarCambiosTitulo} className="btn-generate" style={{flexGrow:1}}><i className="uil uil-save"></i> Guardar</button>
+                        <button onClick={regenerarSeccion} disabled={cargandoIA} className="btn-generate btn-regenerar" style={{flexGrow:1,background:"#fdf4ff",color:"#7c3aed",border:"1.5px solid #e9d5ff"}}>
+                          {cargandoIA ? "Regenerando..." : `Regenerar por IA`}
+                        </button>
+                      </div>
+                      <button onClick={() => setSelectedSectionForRegen(null)} className="btn-cancel" style={{marginTop:10,width:"100%",height:40,fontFamily:"inherit"}}>
+                        <i className="uil uil-times"></i> Cancelar Edición
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <h2 className="analysis-title">Panel de Edición</h2>
+                      <p className="result-text">Selecciona un título de la estructura de la derecha para editarlo o regenerarlo.</p>
+                    </>
+                  )}
+                </div>
+
+                {selectedSectionForRegen && (
+                  <div className="analysis-result fade-in" style={{marginTop:8}}>
+                    <h2 className="analysis-title">Editar Contenido: {selectedSectionForRegen.level.toUpperCase()}</h2>
+                    <div className="select-container">
+                      <label htmlFor="content-type" className="select-label"><i className="uil uil-setting"></i> ¿Qué quiere hacer la IA?</label>
+                      <select id="content-type" className="select-estrategia" value={contentType} onChange={(e) => setContentType(e.target.value)} disabled={cargandoIA}>
+                        <optgroup label="TEXTO GENERAL"><option value="parrafo_narrativo">Escribir párrafos normales</option><option value="ia_libre">Darle libertad creativa a la IA</option></optgroup>
+                        <optgroup label="FORMATOS ESPECIALES"><option value="guia_paso_a_paso">Guía paso a paso</option><option value="lista_beneficios_valor">Lista de puntos clave</option><option value="comparativa_pros_contras">Pros y contras</option><option value="faq_seccion">Preguntas frecuentes</option></optgroup>
+                        <optgroup label="PARTES DEL ARTÍCULO"><option value="introduccion_gancho">Introducción interesante</option><option value="conclusion_llamada_accion">Cierre o conclusión</option></optgroup>
+                        <optgroup label="TABLAS (HTML)"><option value="tabla_tecnica">Tabla de Datos Técnicos</option><option value="tabla_comparativa_antes_despues">Tabla Antes vs. Después</option></optgroup>
+                      </select>
+                    </div>
+                    <div className="tiptap-container contenido-editor">
+                      <div style={{borderBottom:"1px solid #e2e8f0",padding:"6px 8px",background:"#f8fafc",display:"flex",gap:4,flexWrap:"wrap"}}>
+                        {["B","I","U","H2","H3","• Lista","Tabla","🔗"].map((t,i) => <button key={i} type="button" style={{padding:"2px 8px",border:"1px solid #e2e8f0",borderRadius:4,background:"white",cursor:"default",fontSize:"0.75rem",color:"#64748b"}}>{t}</button>)}
+                      </div>
+                      <textarea value={sectionContentValue} onChange={(e) => setSectionContentValue(e.target.value)} rows={8} style={{width:"100%",padding:"0.75rem",border:"none",outline:"none",resize:"vertical",fontFamily:"inherit",fontSize:"0.875rem"}} placeholder="El contenido aparecerá aquí después de generarlo con IA, o escríbelo manualmente..."/>
+                    </div>
+                    <div className="idea-buttons">
+                      <button onClick={guardarContenidoLocal} className="btn-generate" disabled={cargandoIA}><i className="uil uil-save"></i> Guardar</button>
+                      <button onClick={generarContenidoSeccion} className="btn-generate" disabled={cargandoIA} style={{background:"#f5f3ff",color:"#6d28d9",border:"1.5px solid #ddd6fe"}}>
+                        {cargandoIA ? <><i className="uil uil-spinner"></i> Generando...</> : <><i className="uil uil-robot"></i> Generar (IA)</>}
+                      </button>
+                    </div>
+                    <button onClick={() => { setSelectedSectionForRegen(null); setSectionContentValue(""); }} className="btn-cancel" style={{marginTop:10,width:"100%",height:40,fontFamily:"inherit"}} disabled={cargandoIA}>
+                      <i className="uil uil-times"></i> Cancelar
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* ── COLUMNA DERECHA ── */}
+              <div className="generadores-derecha">
+                <section className="idea-generator">
+                  <h2 className="card-title structure-title-with-toggle">
+                    {isEditingStructure ? <><i className="uil uil-sitemap"></i> Estructura del Blog</> : <><i className="uil uil-file-alt"></i> Vista de Documento</>}
+                    <div className="action-buttons-container">
+                      <button className="btn-action-square" onClick={() => setIsEditingStructure(!isEditingStructure)} title={isEditingStructure?"Ver como Documento":"Ver Estructura"}>
+                        <i className={`uil ${isEditingStructure?"uil-eye":"uil-sitemap"}`}></i><span>{isEditingStructure?"Ver Doc":"Estructura"}</span>
+                      </button>
+                      <button className="btn-action-square btn-blue" onClick={() => showToast("Descarga no disponible en demo.","info")}><i className="uil uil-file-download"></i><span>Descargar</span></button>
+                      <button className="btn-action-square btn-gray" onClick={() => showToast("Contenido copiado (demo).","success")}><i className="uil uil-copy"></i><span>Copiar</span></button>
+                    </div>
+                  </h2>
+                  <div className="card-body">
+                    <h1 className="text-center" style={{marginBottom:20,fontSize:"1.6rem",fontWeight:800}}>{blog.title}</h1>
+                    {totalGeneratedWords > 0 && (
+                      <div style={{marginBottom:12,display:"flex",gap:8,flexWrap:"wrap"}}>
+                        <span className="count-badge generated"><i className="uil uil-pen"></i> Generadas: {totalGeneratedWords} palabras</span>
+                        <span className="count-badge total"><i className="uil uil-layer-group"></i> Secciones: {structureWithCount.filter((i) => i.level!=="h1").length}</span>
+                      </div>
+                    )}
+                    <div style={{display:"flex",gap:10,marginBottom:16,flexWrap:"wrap"}}>
+                      <div style={{display:"flex",alignItems:"center",gap:6}}>
+                        <span style={{fontSize:"0.8rem",color:"#64748b",fontWeight:600}}>Estado:</span>
+                        <select value={blogStatus} onChange={(e) => { setBlogStatus(e.target.value); markAsChanged(); }} style={inp}>
+                          <option value="draft">Borrador</option><option value="generated">Estructura Generada</option><option value="review">En Revisión</option><option value="approved">Aprobado</option><option value="published">Publicado</option><option value="ajusted">Ajustes Aplicados</option>
+                        </select>
+                      </div>
+                      <div style={{display:"flex",alignItems:"center",gap:6}}>
+                        <span style={{fontSize:"0.8rem",color:"#64748b",fontWeight:600}}>Prioridad:</span>
+                        <select value={blogPriority} onChange={(e) => { setBlogPriority(e.target.value); markAsChanged(); }} style={inp}>
+                          <option value="Baja">Baja</option><option value="Media">Media</option><option value="Alta">Alta</option>
+                        </select>
+                      </div>
+                    </div>
+                    {cargandoIA ? (
+                      <div style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"3rem",gap:"1rem"}}>
+                        <div style={{width:40,height:40,border:"4px solid #e2e8f0",borderTopColor:"#3b82f6",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}></div>
+                        <p style={{color:"#64748b"}}>Generando con IA...</p>
+                        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                      </div>
+                    ) : isEditingStructure ? (
+                      structureWithCount.length > 0
+                        ? <StructureRenderer structure={structureWithCount} onSelect={seleccionarSeccionEdicion} selectedSection={selectedSectionForRegen} onAction={gestionarAccionDeSeccion} />
+                        : <div className="blog-view-placeholder"><p>No hay estructura. Usa los botones de arriba.</p></div>
+                    ) : renderizarContenidoDelBlog(structureWithCount)}
+                  </div>
+                </section>
+              </div>
+
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  DASHBOARD
+    // ═══════════════════════════════════════════════════════
+
+    function DemoBlog({ onNavigate, blogs, setBlogs }) {
+      const [searchTerm, setSearchTerm] = useState("");
+      const [filters, setFilters] = useState({ estado:"", assigned_to:"", prioridad:"" });
+      const [modalCrear, setModalCrear] = useState(false);
+      const [modalEditar, setModalEditar] = useState(null);
+      const [modalAsignar, setModalAsignar] = useState(null);
+      const [toast, setToast] = useState(null);
+
+      const showToast = (msg, type="success") => { setToast({msg,type}); setTimeout(() => setToast(null), 2500); };
+
+      const handleCrear    = (newBlog)   => { setBlogs((b) => [newBlog,...b]); showToast("Blog creado exitosamente"); };
+      const handleEditar   = (id,data)   => { setBlogs((b) => b.map((blog) => blog.id===id?{...blog,...data,last_modified:new Date().toISOString()}:blog)); showToast("Cambios guardados"); };
+      const handleAsignar  = (id,userId) => { setBlogs((b) => b.map((blog) => blog.id===id?{...blog,assigned_to:userId}:blog)); showToast(userId?`Asignado a ${getUserName(userId)}`:"Asignación removida"); };
+      const handleEliminar = (id)        => { if (!window.confirm("¿Eliminar este blog?")) return; setBlogs((b) => b.filter((blog) => blog.id!==id)); showToast("Blog eliminado","error"); };
+
+      const blogsVisibles = useMemo(() => {
+        let result = [...blogs];
+        if (searchTerm) { const q = searchTerm.toLowerCase(); result = result.filter((b) => b.title.toLowerCase().includes(q)||b.categoria.toLowerCase().includes(q)); }
+        if (filters.estado)      result = result.filter((b) => b.estado===filters.estado);
+        if (filters.prioridad)   result = result.filter((b) => b.prioridad===filters.prioridad);
+        if (filters.assigned_to) result = filters.assigned_to==="unassigned" ? result.filter((b) => !b.assigned_to) : result.filter((b) => b.assigned_to===filters.assigned_to);
+        return result;
+      }, [blogs, searchTerm, filters]);
+
+      const stats = useMemo(() => ([
+        { label:"Artículos Totales", value:blogs.length,                                                                    icon:"uil-files-landscapes" },
+        { label:"Publicados",        value:blogs.filter((b) => b.estado==="published").length,                              icon:"uil-check-circle"     },
+        { label:"Sin Asignar",       value:blogs.filter((b) => !b.assigned_to).length,                                     icon:"uil-user-exclamation" },
+        { label:"En Progreso",       value:blogs.filter((b) => b.estado==="generated"||b.estado==="review").length,         icon:"uil-sync"             },
+      ]), [blogs]);
+
+      const hayFiltros = searchTerm || Object.values(filters).some(Boolean);
+
+      return (
+        <div style={{background:"#e6e6e6",minHeight:"100vh"}}>
+          {toast && (
+            <div style={{position:"fixed",bottom:"4.5rem",right:"1.5rem",zIndex:9999,background:toast.type==="error"?"#fee2e2":"#dcfce7",color:toast.type==="error"?"#dc2626":"#15803d",padding:"0.75rem 1.25rem",borderRadius:"0.75rem",fontWeight:600,fontSize:"0.875rem",boxShadow:"0 4px 12px rgba(0,0,0,0.15)",display:"flex",alignItems:"center",gap:"0.5rem"}}>
+              <i className={`uil ${toast.type==="error"?"uil-times-circle":"uil-check-circle"}`}></i>{toast.msg}
+            </div>
+          )}
+
+          <header style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0.75rem 2rem",backgroundColor:"#ffffff",borderBottom:"1px solid #e2e8f0",boxShadow:"0 4px 6px -1px rgba(0,0,0,0.05)",position:"sticky",top:0,zIndex:100}}>
+            <div>
+              <h1 style={{margin:0,fontSize:"1.80rem",fontWeight:800,color:"#0f172a"}}>Dashboard <span style={{color:"#3b82f6"}}>Blogs</span></h1>
+              <p style={{margin:0,fontSize:"0.875rem",color:"#64748b",fontWeight:500}}>Sistema de gestión de contenido · <span style={{color:"#f59e0b",fontWeight:700}}>DEMO</span></p>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:"1rem"}}>
+              <div style={{background:"#fffbeb",border:"1px solid #fde68a",borderRadius:"0.75rem",padding:"0.5rem 1rem",fontSize:"0.8rem",fontWeight:600,color:"#92400e",display:"flex",alignItems:"center",gap:"0.4rem"}}>
+                <i className="uil uil-info-circle"></i> Modo demo — datos de muestra
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:"0.75rem",padding:"0.4rem 1rem 0.4rem 0.4rem",background:"white",borderRadius:"9999px",border:"1px solid #e2e8f0",boxShadow:"0 1px 2px rgba(0,0,0,0.05)"}}>
+                <div style={{width:"2.5rem",height:"2.5rem",background:"linear-gradient(135deg,#3b82f6,#2563eb)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",color:"white",fontWeight:700,fontSize:"0.9rem"}}>AG</div>
+                <div>
+                  <div style={{fontSize:"0.85rem",fontWeight:700,color:"#1e293b",lineHeight:1.1}}>Ana García</div>
+                  <div style={{fontSize:"0.7rem",fontWeight:600,color:"#2b76ef",textTransform:"uppercase",letterSpacing:"0.025em"}}>Administrador</div>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <main className="container">
+            <section className="stats">
+              {stats.map((s,i) => (
+                <div key={i} className="stat-card">
+                  <div className="stat-icon"><i className={`uil ${s.icon}`}></i></div>
+                  <div><p>{s.label}</p><h2>{s.value}</h2></div>
+                </div>
+              ))}
+            </section>
+
+            <section className="table-section">
+              <div className="table-header-flex">
+                <h3>Últimos Archivos Generados</h3>
+                <div className="table-actions-top">
+                  <div className="search-container">
+                    <div className="search-wrapper">
+                      <i className="uil uil-search"></i>
+                      <input type="text" placeholder="Buscar por título o categoría..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="controls-container">
+                    <div className="filters-row">
+                      <select className="filter-select" value={filters.estado} onChange={(e) => setFilters((f) => ({...f,estado:e.target.value}))}>
+                        <option value="">Estado</option><option value="draft">Borrador</option><option value="generated">Generado</option><option value="review">En Revisión</option><option value="approved">Aprobado</option><option value="published">Publicado</option><option value="ajusted">Ajustado</option>
+                      </select>
+                      <select className="filter-select" value={filters.assigned_to} onChange={(e) => setFilters((f) => ({...f,assigned_to:e.target.value}))}>
+                        <option value="">Asignado</option><option value="unassigned">Sin asignar</option>
+                        {DEMO_USERS.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+                      </select>
+                      <select className="filter-select" value={filters.prioridad} onChange={(e) => setFilters((f) => ({...f,prioridad:e.target.value}))}>
+                        <option value="">Prioridad</option><option value="Baja">Baja</option><option value="Media">Media</option><option value="Alta">Alta</option>
+                      </select>
+                    </div>
+                    <div className="button-group">
+                      {hayFiltros && <button className="btn-clear-filters" onClick={() => { setFilters({estado:"",assigned_to:"",prioridad:""}); setSearchTerm(""); }}><i className="uil uil-refresh"></i></button>}
+                      <button className="btn-create-new" onClick={() => setModalCrear(true)}><i className="uil uil-plus"></i> Nuevo Blog</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="table-container shadow-sm">
+                <table className="modern-table">
+                  <thead>
+                    <tr>
+                      <th>Título del Contenido</th><th>Categoría</th><th>Asignado</th><th>Estado</th><th>Prioridad</th><th>Modificación</th>
+                      <th style={{textAlign:"right"}}>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {blogsVisibles.length === 0 && <tr><td colSpan={7} style={{textAlign:"center",padding:"3rem",color:"#94a3b8"}}>No se encontraron resultados</td></tr>}
+                    {blogsVisibles.map((blog) => {
+                      const meta = STATUS_META[blog.estado] || STATUS_META.draft;
+                      return (
+                        <tr key={blog.id}>
+                          <td style={{fontWeight:600,color:"#1e293b",maxWidth:280,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{blog.title}</td>
+                          <td><span style={{color:"#64748b",fontSize:"0.85rem"}}><i className="uil uil-folder" style={{marginRight:4}}></i>{blog.categoria}</span></td>
+                          <td>
+                            <div style={{display:"flex",alignItems:"center",gap:8}}>
+                              <div style={{width:24,height:24,borderRadius:"50%",background:"#e2e8f0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.7rem"}}><i className="uil uil-user"></i></div>
+                              <span style={{fontSize:"0.85rem"}}>{getUserName(blog.assigned_to)}</span>
+                            </div>
+                          </td>
+                          <td><span className={`badge ${meta.cls}`}><i className={`uil ${meta.icon}`} style={{fontSize:"0.9rem"}}></i>{meta.label}</span></td>
+                          <td>
+                            <span className={`badge priority-${blog.prioridad}`}>
+                              <span style={{display:"inline-block",width:6,height:6,borderRadius:"50%",marginRight:4,background:blog.prioridad==="Alta"?"#dc3545":blog.prioridad==="Media"?"#ffc107":"#28a745"}}></span>
+                              {blog.prioridad}
+                            </span>
+                          </td>
+                          <td style={{fontSize:"0.8rem",color:"#94a3b8"}}>{formatDate(blog.last_modified)}</td>
+                          <td>
+                            <div className="options-container">
+                              <button className="btn-action view"   title="Ver / Editar contenido"  onClick={() => onNavigate("generacion", blog)}><i className="uil uil-eye"></i></button>
+                              <button className="btn-action assign" title="Asignar usuario"          onClick={() => setModalAsignar(blog)}><i className="uil uil-user-plus"></i></button>
+                              <button className="btn-action edit"   title="Editar configuración"    onClick={() => setModalEditar(blog)}><i className="uil uil-setting"></i></button>
+                              <button className="btn-action delete" title="Eliminar"                onClick={() => handleEliminar(blog.id)}><i className="uil uil-trash-alt"></i></button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </main>
+
+          {modalCrear   && <ModalCreacion  onClose={() => setModalCrear(false)}  onSave={handleCrear} />}
+          {modalEditar  && <ModalEdicion   blog={modalEditar}  onClose={() => setModalEditar(null)}  onSave={handleEditar} />}
+          {modalAsignar && <ModalAsignacion blog={modalAsignar} onClose={() => setModalAsignar(null)} onSave={handleAsignar} />}
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  APP (ROUTER)
+    // ═══════════════════════════════════════════════════════
+
+    function App() {
+      const [currentView, setCurrentView] = useState("dashboard");
+      const [activeBlog, setActiveBlog] = useState(null);
+      const [blogs, setBlogs] = useState(INITIAL_BLOGS);
+
+      const navigate = (view, blog = null) => {
+        setCurrentView(view);
+        setActiveBlog(blog);
+        window.scrollTo(0, 0);
+      };
+
+      if (currentView === "generacion") {
+        return <DemoBlog_Generacion blog={activeBlog} onNavigate={navigate} />;
+      }
+
+      return <DemoBlog blogs={blogs} setBlogs={setBlogs} onNavigate={navigate} />;
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

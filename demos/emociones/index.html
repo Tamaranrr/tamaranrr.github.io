@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reconocimiento Facial de Emociones · Demo Python</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="emociones.css"/>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ─── DATOS DE EMOCIONES ───────────────────────────────────────────────────────
+const EMOTIONS = {
+  feliz: {
+    label: 'Alegre', emoji: '😊', color: '#f59e0b',
+    borderColor: '#fbbf24', bgLight: '#fffbeb',
+    scores: { Alegre:89, Neutral:7, Sorprendido:3, Triste:0, Enojado:0, Asustado:0, Disgustado:1 },
+    intro: '¡Tu expresión irradia mucha energía positiva hoy! 😊 El análisis detectó curvatura elevada del cigomático mayor y activación del orbicular del ojo — señales inequívocas de alegría genuina. ¿Qué te tiene de tan buen humor?',
+    replies: ['Tuve un día increíble', 'Siempre soy así de positivo/a', '¿Cómo detectas eso exactamente?'],
+    responses: {
+      'Tuve un día increíble': 'Eso es maravilloso. Las emociones positivas no solo se sienten bien — activan el sistema de recompensa dopaminérgico y fortalecen la memoria. ¿Qué fue lo más memorable del día? 🌟',
+      'Siempre soy así de positivo/a': 'La resiliencia emocional positiva es uno de los predictores más fuertes de bienestar mental. ¿Hay prácticas concretas que te ayuden a mantener ese estado? 💛',
+      '¿Cómo detectas eso exactamente?': 'Uso MediaPipe para extraer 68 landmarks faciales en tiempo real. DeepFace los procesa contra el modelo FER2013 entrenado con 35.887 imágenes. El músculo cigomático mayor y el orbicular del ojo activos son el patrón clave de la sonrisa de Duchenne 🤖',
+    },
+  },
+  triste: {
+    label: 'Triste', emoji: '😢', color: '#3b82f6',
+    borderColor: '#60a5fa', bgLight: '#eff6ff',
+    scores: { Alegre:2, Neutral:12, Sorprendido:1, Triste:76, Enojado:5, Asustado:4, Disgustado:0 },
+    intro: 'Percibo algo de tristeza en tu expresión 💙 El descenso del corrugador superciliar y las comisuras labiales hacia abajo son claras. No tienes que procesar eso solo/a — estoy aquí para escucharte. ¿Quieres hablar?',
+    replies: ['Me siento un poco solo/a', 'Solo estoy cansado/a emocionalmente', 'No quiero hablar por ahora'],
+    responses: {
+      'Me siento un poco solo/a': 'La soledad es una de las experiencias humanas más intensas. A veces surge incluso rodeado/a de personas. ¿Hay algo específico que la esté disparando, o es más una sensación general? 🤝',
+      'Solo estoy cansado/a emocionalmente': 'El agotamiento emocional es real y serio — el cerebro usa tanta energía procesando emociones como haciendo cálculos complejos. ¿Cuándo fue la última vez que te diste permiso de descansar de verdad? 💙',
+      'No quiero hablar por ahora': 'Entendido, lo respeto completamente. El silencio también es válido. Aquí estaré cuando quieras 🌿',
+    },
+  },
+  enojado: {
+    label: 'Enojado', emoji: '😠', color: '#ef4444',
+    borderColor: '#f87171', bgLight: '#fef2f2',
+    scores: { Alegre:0, Neutral:2, Sorprendido:0, Triste:4, Enojado:83, Asustado:1, Disgustado:10 },
+    intro: 'Detecto tensión importante en tu expresión 🌬️ El corrugador superciliar está contraído hacia abajo y el músculo masetero activo. El enojo es una emoción válida y con información útil. ¿Qué está pasando?',
+    replies: ['Tuve un conflicto difícil', 'Estoy frustrado/a conmigo mismo/a', 'Ayúdame a calmarme'],
+    responses: {
+      'Tuve un conflicto difícil': 'Los conflictos activan el sistema de amenaza — es normal sentirse así. Cuando estés listo/a, puede ayudar identificar qué necesidad tuya no fue respetada en esa situación. ¿Qué pasó? 🌬️',
+      'Estoy frustrado/a conmigo mismo/a': 'La autocrítica intensa libera cortisol de la misma forma que una amenaza externa. Pregúntate: ¿le dirías lo que te dices a ti mismo/a a alguien que quieres? La respuesta suele ser reveladora 💪',
+      'Ayúdame a calmarme': 'Técnica 4-7-8: inhala contando 4, sostén 7, exhala lentamente contando 8. Repite 3 veces. Activa el nervio vago y contrarresta la respuesta de lucha-huida fisiológicamente 🧘',
+    },
+  },
+  asustado: {
+    label: 'Asustado', emoji: '😨', color: '#8b5cf6',
+    borderColor: '#a78bfa', bgLight: '#f5f3ff',
+    scores: { Alegre:1, Neutral:8, Sorprendido:15, Triste:4, Enojado:1, Asustado:71, Disgustado:0 },
+    intro: 'Noto ansiedad o miedo en tu expresión 🌟 Las cejas elevadas y los ojos muy abiertos activan más campo visual — una respuesta evolutiva de alerta. ¿Hay algo que te esté preocupando?',
+    replies: ['Tengo algo difícil que resolver', 'Siento ansiedad sin razón clara', 'Ya estoy mejor, fue pasajero'],
+    responses: {
+      'Tengo algo difícil que resolver': 'Los problemas complejos se ven más manejables cuando los fragmentamos. ¿Cuál sería el paso más pequeño y concreto que podrías dar hoy, uno solo? A veces eso es suficiente para romper el bloqueo 🌱',
+      'Siento ansiedad sin razón clara': 'La ansiedad flotante es muy común — el cerebro anticipa amenazas incluso sin estímulo externo. Prueba el método 5-4-3-2-1: nombra 5 cosas que ves, 4 que puedes tocar, 3 que escuchas. Ancla tu mente al presente 🌿',
+      'Ya estoy mejor, fue pasajero': 'Me alegra escuchar eso. Las respuestas de miedo pasajeras son normales. ¿Hay algo que te ayude a volver al equilibrio cuando las sientes? 💜',
+    },
+  },
+  sorprendido: {
+    label: 'Sorprendido', emoji: '😮', color: '#06b6d4',
+    borderColor: '#22d3ee', bgLight: '#ecfeff',
+    scores: { Alegre:8, Neutral:2, Sorprendido:85, Triste:1, Enojado:0, Asustado:4, Disgustado:0 },
+    intro: '¡Algo claramente te sorprendió! 🤔 Cejas muy elevadas, ojos abiertos al máximo y boca entreabierta — el modelo lo clasifica con 85% de confianza. La sorpresa dura en promedio 1.7 segundos antes de convertirse en otra emoción. ¿Qué pasó?',
+    replies: ['¡Recibí buenas noticias!', 'Me pasó algo totalmente inesperado', 'Me sorprende esta tecnología'],
+    responses: {
+      '¡Recibí buenas noticias!': '¡Fantástico! La sorpresa positiva libera dopamina y norepinefrina al mismo tiempo — una combinación muy energizante. ¿Quieres compartir qué fue? 🎉',
+      'Me pasó algo totalmente inesperado': 'Lo inesperado puede desestabilizarnos momentáneamente, para bien o para mal. ¿Cómo te sientes ahora que lo estás procesando? La sorpresa inicial normalmente da paso a emociones más claras 🤝',
+      'Me sorprende esta tecnología': '¡Me alegra! El sistema usa MediaPipe FaceMesh con 468 landmarks, DeepFace para clasificación de emociones y un modelo conversacional que adapta sus respuestas al estado afectivo detectado en tiempo real 🤖',
+    },
+  },
+  neutral: {
+    label: 'Neutral', emoji: '😐', color: '#64748b',
+    borderColor: '#94a3b8', bgLight: '#f8fafc',
+    scores: { Alegre:4, Neutral:91, Sorprendido:1, Triste:2, Enojado:1, Asustado:1, Disgustado:0 },
+    intro: 'Estás en un estado de equilibrio emocional 😌 Ningún grupo muscular facial dominante — baja activación del corrugador, cigomático y depresor. Es un buen punto de partida para una conversación reflexiva. ¿Qué tienes en mente?',
+    replies: ['¿Cómo funciona este sistema?', 'Quiero explorar las otras emociones', 'Cuéntame sobre el proyecto'],
+    responses: {
+      '¿Cómo funciona este sistema?': 'El pipeline es: 1) OpenCV captura video a 30fps, 2) MediaPipe extrae 68 landmarks faciales por fotograma, 3) DeepFace clasifica la emoción con FER2013, 4) Un modelo de lenguaje genera respuestas empáticas adaptadas a la emoción. Todo en tiempo real en Python 🧠',
+      'Quiero explorar las otras emociones': 'Perfecto. Usa los botones de abajo para simular cada emoción y ver cómo el sistema detecta los patrones musculares faciales y cambia su respuesta conversacional. Cada emoción tiene un perfil de activación muscular único 🎭',
+      'Cuéntame sobre el proyecto': 'Fue una opción de grado en Python. El objetivo: crear un asistente conversacional con inteligencia emocional real — que no solo entienda las palabras, sino el estado afectivo del usuario, para responder con mayor empatía y utilidad 💡',
+    },
+  },
+};
+
+// Nombre corto para barras
+const BAR_LABELS = ['Alegre','Neutral','Sorprendido','Triste','Enojado','Asustado','Disgustado'];
+const BAR_COLORS = {
+  Alegre:'#f59e0b', Neutral:'#64748b', Sorprendido:'#06b6d4',
+  Triste:'#3b82f6', Enojado:'#ef4444', Asustado:'#8b5cf6', Disgustado:'#10b981',
+};
+
+// Emojis para selector
+const SELECTOR = [
+  { key:'feliz',       emoji:'😊', label:'Alegre'      },
+  { key:'triste',      emoji:'😢', label:'Triste'      },
+  { key:'enojado',     emoji:'😠', label:'Enojado'     },
+  { key:'asustado',    emoji:'😨', label:'Asustado'    },
+  { key:'sorprendido', emoji:'😮', label:'Sorpresa'    },
+  { key:'neutral',     emoji:'😐', label:'Neutral'     },
+];
+
+// Landmarks faciales (coordenadas relativas a SVG 200x200)
+const LANDMARKS = [
+  // Contorno mandíbula
+  {x:22,y:110},{x:24,y:130},{x:30,y:148},{x:40,y:162},{x:52,y:171},
+  {x:66,y:176},{x:82,y:178},{x:100,y:179},{x:118,y:178},{x:134,y:176},
+  {x:148,y:171},{x:160,y:162},{x:170,y:148},{x:176,y:130},{x:178,y:110},
+  // Ceja izquierda
+  {x:54,y:72},{x:63,y:67},{x:73,y:66},{x:82,y:68},{x:88,y:72},
+  // Ceja derecha
+  {x:112,y:72},{x:118,y:68},{x:127,y:66},{x:137,y:67},{x:146,y:72},
+  // Ojo izquierdo
+  {x:60,y:90},{x:68,y:85},{x:76,y:85},{x:85,y:90},{x:76,y:95},{x:68,y:95},
+  // Ojo derecho
+  {x:115,y:90},{x:124,y:85},{x:132,y:85},{x:140,y:90},{x:132,y:95},{x:124,y:95},
+  // Nariz
+  {x:100,y:100},{x:96,y:110},{x:100,y:116},{x:104,y:110},
+  {x:88,y:120},{x:100,y:123},{x:112,y:120},
+  // Boca exterior
+  {x:78,y:130},{x:88,y:126},{x:100,y:125},{x:112,y:126},{x:122,y:130},
+  {x:116,y:138},{x:100,y:141},{x:84,y:138},
+];
+
+// ─── SVG CARA ─────────────────────────────────────────────────────────────────
+function FaceSVG({ emotion }) {
+  const skin = '#fde08a';
+  const brow = '#7c3d12';
+  const feat = '#1a2332';
+
+  const feats = {
+    feliz: (
+      <>
+        <path d="M56,73 C64,66 80,66 87,73" stroke={brow} strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+        <path d="M113,73 C120,66 136,66 144,73" stroke={brow} strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+        <path d="M59,92 C66,83 82,83 88,92" stroke={feat} strokeWidth="3.5" fill="none" strokeLinecap="round"/>
+        <path d="M112,92 C118,83 134,83 140,92" stroke={feat} strokeWidth="3.5" fill="none" strokeLinecap="round"/>
+        <ellipse cx="63" cy="114" rx="12" ry="7" fill="#f87171" opacity="0.32"/>
+        <ellipse cx="137" cy="114" rx="12" ry="7" fill="#f87171" opacity="0.32"/>
+        <path d="M74,126 C84,148 116,148 126,126" stroke={feat} strokeWidth="3" fill="none" strokeLinecap="round"/>
+      </>
+    ),
+    triste: (
+      <>
+        <path d="M56,70 C64,77 80,75 87,69" stroke={brow} strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+        <path d="M113,69 C120,75 136,77 144,70" stroke={brow} strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+        <circle cx="73" cy="91" r="9" fill={feat}/>
+        <circle cx="127" cy="91" r="9" fill={feat}/>
+        <circle cx="77" cy="88" r="3.5" fill="white" opacity="0.75"/>
+        <circle cx="131" cy="88" r="3.5" fill="white" opacity="0.75"/>
+        <ellipse cx="73" cy="105" rx="2.5" ry="4.5" fill="#93c5fd" opacity="0.65"/>
+        <path d="M76,135 C86,122 114,122 124,135" stroke={feat} strokeWidth="3" fill="none" strokeLinecap="round"/>
+      </>
+    ),
+    enojado: (
+      <>
+        <path d="M54,70 C64,76 80,78 88,70" stroke={brow} strokeWidth="3.5" fill="none" strokeLinecap="round"/>
+        <path d="M112,70 C120,78 136,76 146,70" stroke={brow} strokeWidth="3.5" fill="none" strokeLinecap="round"/>
+        <line x1="97" y1="76" x2="96" y2="83" stroke={brow} strokeWidth="2" strokeLinecap="round"/>
+        <line x1="103" y1="76" x2="104" y2="83" stroke={brow} strokeWidth="2" strokeLinecap="round"/>
+        <circle cx="73" cy="93" r="8" fill={feat}/>
+        <circle cx="127" cy="93" r="8" fill={feat}/>
+        <path d="M78,131 C88,126 112,126 122,131" stroke={feat} strokeWidth="3" fill="none" strokeLinecap="round"/>
+      </>
+    ),
+    asustado: (
+      <>
+        <path d="M57,64 C65,57 80,60 87,67" stroke={brow} strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+        <path d="M113,67 C120,60 135,57 143,64" stroke={brow} strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+        <circle cx="73" cy="91" r="11.5" fill={feat}/>
+        <circle cx="127" cy="91" r="11.5" fill={feat}/>
+        <circle cx="77" cy="87" r="4.5" fill="white" opacity="0.88"/>
+        <circle cx="131" cy="87" r="4.5" fill="white" opacity="0.88"/>
+        <ellipse cx="100" cy="133" rx="14" ry="10" fill={feat}/>
+      </>
+    ),
+    sorprendido: (
+      <>
+        <path d="M54,60 C64,52 80,53 87,61" stroke={brow} strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+        <path d="M113,61 C120,53 136,52 146,60" stroke={brow} strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+        <circle cx="73" cy="90" r="13" fill={feat}/>
+        <circle cx="127" cy="90" r="13" fill={feat}/>
+        <circle cx="79" cy="85" r="5.5" fill="white" opacity="0.9"/>
+        <circle cx="133" cy="85" r="5.5" fill="white" opacity="0.9"/>
+        <ellipse cx="100" cy="135" rx="18" ry="15" fill={feat}/>
+        <ellipse cx="100" cy="131" rx="13" ry="8" fill="#7f1d1d" opacity="0.35"/>
+      </>
+    ),
+    neutral: (
+      <>
+        <path d="M57,72 C67,70 80,70 87,72" stroke={brow} strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+        <path d="M113,72 C120,70 133,70 143,72" stroke={brow} strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+        <circle cx="73" cy="91" r="9" fill={feat}/>
+        <circle cx="127" cy="91" r="9" fill={feat}/>
+        <circle cx="77" cy="88" r="3.5" fill="white" opacity="0.75"/>
+        <circle cx="131" cy="88" r="3.5" fill="white" opacity="0.75"/>
+        <line x1="82" y1="129" x2="118" y2="129" stroke={feat} strokeWidth="3" strokeLinecap="round"/>
+      </>
+    ),
+  };
+
+  return (
+    <svg viewBox="0 0 200 210" width="100%" height="100%" style={{ display:'block' }}>
+      <ellipse cx="100" cy="200" rx="68" ry="9" fill="rgba(0,0,0,.2)"/>
+      <ellipse cx="17" cy="103" rx="13" ry="19" fill={skin}/>
+      <ellipse cx="183" cy="103" rx="13" ry="19" fill={skin}/>
+      <circle cx="100" cy="103" r="88" fill={skin}/>
+      <path d="M96,108 C96,116 92,118 96,121 C99,123 101,123 104,121 C108,118 104,116 104,108"
+            stroke={brow} strokeWidth="1.5" fill="none" opacity="0.45"/>
+      {feats[emotion] || feats.neutral}
+    </svg>
+  );
+}
+
+// ─── COMPONENTES ─────────────────────────────────────────────────────────────
+
+function ConfidenceBars({ scores }) {
+  return (
+    <div className="confidence-section">
+      <div className="conf-title">Probabilidades por clase — FER2013</div>
+      {BAR_LABELS.map(label => {
+        const val = scores[label] || 0;
+        const color = BAR_COLORS[label];
+        return (
+          <div key={label} className="conf-row">
+            <span className="conf-label">
+              <span style={{ fontSize:'0.75rem' }}>{SELECTOR.find(s => s.label === label || (label === 'Alegre' && s.key === 'feliz') || (label === 'Sorprendido' && s.key === 'sorprendido') || (label === 'Asustado' && s.key === 'asustado') || (label === 'Enojado' && s.key === 'enojado') || (label === 'Triste' && s.key === 'triste'))?.emoji || ''}</span>
+              {label}
+            </span>
+            <div className="conf-bar-wrap">
+              <div className="conf-bar-fill" style={{ width: `${val}%`, background: color }}/>
+            </div>
+            <span className="conf-pct" style={{ color }}>{val}%</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function EmotionSelector({ current, onChange }) {
+  return (
+    <div className="emotion-selector">
+      <div className="selector-title">Simular emoción detectada</div>
+      <div className="selector-grid">
+        {SELECTOR.map(({ key, emoji, label }) => {
+          const color = EMOTIONS[key].color;
+          return (
+            <button
+              key={key}
+              className={`emo-btn${current === key ? ' active' : ''}`}
+              style={{ '--emo-color': color }}
+              onClick={() => onChange(key)}
+            >
+              <span className="emo-emoji">{emoji}</span>
+              <span className="emo-label">{label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function BotMessage({ text }) {
+  return (
+    <div className="msg-row bot">
+      <div className="msg-avatar bot">🧠</div>
+      <div className="msg-bubble bot">{text}</div>
+    </div>
+  );
+}
+
+function UserMessage({ text }) {
+  return (
+    <div className="msg-row user">
+      <div className="msg-avatar user">YO</div>
+      <div className="msg-bubble user">{text}</div>
+    </div>
+  );
+}
+
+function TypingIndicator() {
+  return (
+    <div className="msg-row bot">
+      <div className="msg-avatar bot">🧠</div>
+      <div className="msg-bubble bot" style={{ padding:'0.55rem 0.95rem' }}>
+        <div className="typing-dots">
+          <div className="typing-dot"/><div className="typing-dot"/><div className="typing-dot"/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── APP ──────────────────────────────────────────────────────────────────────
+function App() {
+  const [emotion,   setEmotion]   = useState('neutral');
+  const [messages,  setMessages]  = useState([
+    { id:0, type:'bot', text:'Sistema iniciado. Cámara activa — analizando expresión facial en tiempo real... 👁️ Selecciona una emoción en el panel izquierdo o escribe algo para comenzar la conversación.' }
+  ]);
+  const [quickReplies, setQuickReplies] = useState([]);
+  const [isTyping,  setIsTyping]  = useState(false);
+  const [input,     setInput]     = useState('');
+  const [fps,       setFps]       = useState(28);
+
+  const endRef = useRef(null);
+
+  // Simular FPS fluctuante
+  useEffect(() => {
+    const t = setInterval(() => setFps(27 + Math.floor(Math.random() * 4)), 1200);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isTyping]);
+
+  const emo = EMOTIONS[emotion];
+
+  const handleEmotionChange = useCallback((key) => {
+    setEmotion(key);
+    setQuickReplies([]);
+    setIsTyping(true);
+
+    setTimeout(() => {
+      setIsTyping(false);
+      const e = EMOTIONS[key];
+      setMessages(prev => [...prev, { id: Date.now(), type: 'bot', text: e.intro }]);
+      setTimeout(() => setQuickReplies(e.replies), 300);
+    }, 1600);
+  }, []);
+
+  const sendMessage = useCallback(async (text) => {
+    const trimmed = text.trim();
+    if (!trimmed || isTyping) return;
+
+    setInput('');
+    setQuickReplies([]);
+    setMessages(prev => [...prev, { id: Date.now(), type: 'user', text: trimmed }]);
+    setIsTyping(true);
+
+    const reply = emo.responses[trimmed] ||
+      `Interesante. Seguimos detectando "${emo.label}" con ${emo.scores[emo.label === 'Alegre' ? 'Alegre' : emo.label]}% de confianza. ¿Hay algo más en lo que pueda acompañarte?`;
+
+    setTimeout(() => {
+      setIsTyping(false);
+      setMessages(prev => [...prev, { id: Date.now(), type: 'bot', text: reply }]);
+    }, 1400);
+  }, [isTyping, emo]);
+
+  const handleKey = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input); }
+  };
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', height:'100vh' }}>
+
+      {/* HEADER */}
+      <header className="app-header">
+        <div className="header-left">
+          <div className="header-logo">🎭</div>
+          <div>
+            <div className="header-title">Reconocimiento Facial de Emociones</div>
+            <div className="header-sub">Opción de grado · Python · Computer Vision + Conversación Empática</div>
+          </div>
+        </div>
+        <div className="header-right">
+          <span className="tech-pill python">Python</span>
+          <span className="tech-pill opencv">OpenCV</span>
+          <span className="tech-pill deepface">DeepFace</span>
+          <span className="tech-pill gpt">GPT-4o</span>
+          <span className="demo-pill">DEMO</span>
+        </div>
+      </header>
+
+      {/* LAYOUT */}
+      <div className="app-layout">
+
+        {/* ── PANEL CÁMARA ── */}
+        <div className="camera-panel">
+
+          {/* Vista de cámara */}
+          <div className="cam-view-wrap">
+            <div className="cam-view">
+
+              {/* Cara SVG */}
+              <div className="cam-face-area">
+                <FaceSVG emotion={emotion} />
+              </div>
+
+              {/* Landmarks SVG overlay */}
+              <svg className="landmarks-svg" viewBox="0 0 100 75" preserveAspectRatio="none">
+                {LANDMARKS.map((pt, i) => (
+                  <circle
+                    key={i}
+                    cx={pt.x / 2} cy={pt.y * 0.355}
+                    r="0.5"
+                    fill={emo.color}
+                    opacity="0.65"
+                  />
+                ))}
+              </svg>
+
+              {/* Bounding box */}
+              <div className="bbox">
+                {['tl','tr','bl','br'].map(c => (
+                  <div key={c} className={`bbox-corner ${c}`} style={{ borderColor: emo.color }}/>
+                ))}
+                <div className="scan-line" style={{ color: emo.color }}/>
+              </div>
+
+              {/* Overlay: emotion badge */}
+              <div className="cam-overlay-tl">
+                <div className="emotion-overlay-badge" style={{ borderColor: emo.borderColor, color: emo.color }}>
+                  {emo.emoji} {emo.label.toUpperCase()}
+                </div>
+              </div>
+
+              {/* Overlay: REC */}
+              <div className="cam-overlay-tr">
+                <span className="fps-badge"><span className="rec-dot"/>REC · {fps} FPS</span>
+              </div>
+
+              {/* Overlay: info */}
+              <div className="cam-overlay-bl">
+                640×480 · DeepFace · MediaPipe
+              </div>
+            </div>
+          </div>
+
+          {/* Barras de confianza */}
+          <ConfidenceBars scores={emo.scores} />
+
+          {/* Selector de emoción */}
+          <EmotionSelector current={emotion} onChange={handleEmotionChange} />
+        </div>
+
+        {/* ── PANEL CHAT ── */}
+        <div className="chat-panel">
+
+          {/* Barra de estado emocional */}
+          <div className="emotion-status-bar">
+            <div className="emotion-status-badge"
+              style={{ background: emo.bgLight, borderColor: emo.borderColor, color: emo.color }}>
+              <div className="emotion-status-dot" style={{ background: emo.color }}/>
+              {emo.emoji} {emo.label}
+            </div>
+            <span className="emotion-status-label">Emoción detectada · respuesta empática activa</span>
+            <span className="emotion-status-conf">conf. {emo.scores[Object.keys(emo.scores).find(k => emo.scores[k] === Math.max(...Object.values(emo.scores)))]}%</span>
+          </div>
+
+          {/* Mensajes */}
+          <div className="chat-messages">
+            {messages.map(m =>
+              m.type === 'bot'
+                ? <BotMessage key={m.id} text={m.text}/>
+                : <UserMessage key={m.id} text={m.text}/>
+            )}
+            {isTyping && <TypingIndicator/>}
+            <div ref={endRef}/>
+          </div>
+
+          {/* Quick replies */}
+          {quickReplies.length > 0 && (
+            <div className="quick-replies">
+              {quickReplies.map((r, i) => (
+                <button
+                  key={i}
+                  className="quick-btn"
+                  style={{ animationDelay: `${i * 0.08}s` }}
+                  onClick={() => sendMessage(r)}
+                  disabled={isTyping}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Input */}
+          <div className="chat-input-bar">
+            <textarea
+              className="chat-input"
+              placeholder="Escribe algo... el asistente responde según tu emoción detectada"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={handleKey}
+              rows={1}
+              disabled={isTyping}
+            />
+            <button
+              className="send-btn"
+              onClick={() => sendMessage(input)}
+              disabled={!input.trim() || isTyping}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App/>);
+</script>
+</body>
+</html>

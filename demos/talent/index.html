@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Talent Intelligence — Demo Interactivo</title>
+  <link rel="stylesheet" href="talent.css" />
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// ─── DATA ──────────────────────────────────────────────────────────────────
+
+const candidates = [
+  {
+    name: "María Alejandra Rodríguez",
+    initials: "MA",
+    email: "m.rodriguez@gmail.com",
+    phone: "+57 310 456 7890",
+    job: "Desarrolladora Full Stack",
+    exp: 4,
+    location: "Bogotá, Colombia",
+    skills: ["Python", "React", "PostgreSQL", "FastAPI", "Docker", "Git"],
+    education: "Ing. de Sistemas · Universidad Nacional",
+    score: 94,
+    strengths: [
+      "Experiencia sólida en Python y React",
+      "Conocimiento en Docker y CI/CD",
+      "Portfolio con proyectos similares al cargo",
+    ],
+    weaknesses: [
+      "Sin certificación cloud (AWS/GCP)",
+      "Experiencia limitada en equipos +10 personas",
+    ],
+    recommendation: "Candidata altamente recomendada. Cumple todos los requisitos técnicos del perfil Full Stack.",
+    vacancy: "Desarrollador Full Stack",
+    status: "En revisión",
+    color: "#1d4ed8",
+  },
+  {
+    name: "Carlos Eduardo Gómez",
+    initials: "CE",
+    email: "c.gomez@outlook.com",
+    phone: "+57 315 234 5678",
+    job: "Analista de Datos Senior",
+    exp: 3,
+    location: "Medellín, Colombia",
+    skills: ["Python", "Pandas", "SQL", "Power BI", "Tableau", "Machine Learning"],
+    education: "Estadística · Universidad de Antioquia",
+    score: 87,
+    strengths: [
+      "Dominio avanzado en análisis estadístico",
+      "Experiencia en visualización de datos",
+      "Proyectos de ML en producción",
+    ],
+    weaknesses: [
+      "Experiencia limitada en Big Data (Spark)",
+      "Sin conocimiento de herramientas cloud",
+    ],
+    recommendation: "Buen candidato para análisis de datos. Requiere capacitación en herramientas cloud.",
+    vacancy: "Analista de Datos",
+    status: "Preseleccionado",
+    color: "#7c3aed",
+  },
+  {
+    name: "Ana Sofía López",
+    initials: "AL",
+    email: "alopez@hotmail.com",
+    phone: "+57 320 789 0123",
+    job: "Desarrolladora Frontend",
+    exp: 2,
+    location: "Bogotá, Colombia",
+    skills: ["React", "JavaScript", "Node.js", "CSS", "TypeScript"],
+    education: "Ing. de Software · UNIMINUTO",
+    score: 72,
+    strengths: [
+      "Fuerte en desarrollo frontend moderno",
+      "Código limpio y bien documentado",
+      "Alta adaptabilidad",
+    ],
+    weaknesses: [
+      "Poca experiencia en backend robusto",
+      "Sin experiencia en Python",
+      "Portfolio limitado",
+    ],
+    recommendation: "Candidata con potencial. Mejor posición para roles junior/semi-senior Full Stack.",
+    vacancy: "Desarrollador Full Stack",
+    status: "En revisión",
+    color: "#0891b2",
+  },
+  {
+    name: "Juan Pablo Pérez",
+    initials: "JP",
+    email: "jp.perez@gmail.com",
+    phone: "+57 318 567 8901",
+    job: "Backend Developer",
+    exp: 5,
+    location: "Cali, Colombia",
+    skills: ["Python", "Django", "REST APIs", "MySQL", "Redis", "AWS"],
+    education: "Ing. Electrónica · Universidad del Valle",
+    score: 68,
+    strengths: [
+      "Experiencia sólida en backend Python",
+      "Conocimiento de AWS",
+      "APIs bien estructuradas",
+    ],
+    weaknesses: [
+      "Sin experiencia en React",
+      "Frameworks desactualizados (Django vs FastAPI)",
+      "Poca exp. en trabajo remoto/híbrido",
+    ],
+    recommendation: "Candidato válido para roles backend puro. No ideal para perfil Full Stack completo.",
+    vacancy: "Desarrollador Full Stack",
+    status: "Descartado",
+    color: "#d97706",
+  },
+  {
+    name: "Laura Isabel Martínez",
+    initials: "LM",
+    email: "l.martinez@corporate.com",
+    phone: "+57 316 890 1234",
+    job: "Gerente de Proyectos TI",
+    exp: 6,
+    location: "Medellín, Colombia",
+    skills: ["PMP", "Scrum", "Kanban", "MS Project", "Jira", "Presupuesto", "Stakeholders"],
+    education: "Administración de Empresas · EAFIT + PMP Certificada",
+    score: 91,
+    strengths: [
+      "Certificación PMP vigente (2024)",
+      "Experiencia en proyectos de +$500M",
+      "Liderazgo de equipos multidisciplinarios",
+    ],
+    weaknesses: [
+      "Expectativa salarial alta ($9M)",
+      "Disponibilidad en 30 días",
+    ],
+    recommendation: "Candidata sobresaliente para Gerente de Proyectos PMO.",
+    vacancy: "Gerente de Proyectos",
+    status: "Preseleccionado",
+    color: "#0891b2",
+  },
+];
+
+const vacancies = [
+  {
+    title: "Desarrollador Full Stack",
+    dept: "Tecnología",
+    location: "Bogotá, Colombia",
+    modality: "Híbrido",
+    salary: "$5.000.000 – $8.000.000 COP",
+    exp: "3+ años",
+    skills: ["Python", "React", "PostgreSQL", "FastAPI", "Docker"],
+    desc: "Buscamos un desarrollador Full Stack para liderar el desarrollo de aplicaciones web empresariales con enfoque en IA y automatización de procesos.",
+    applied: 3,
+    top: 94,
+    status: "Activa",
+    color: "#1d4ed8",
+  },
+  {
+    title: "Analista de Datos",
+    dept: "Inteligencia de Negocios",
+    location: "Remoto",
+    modality: "100% Remoto",
+    salary: "$3.500.000 – $5.500.000 COP",
+    exp: "2+ años",
+    skills: ["Python", "SQL", "Power BI", "Machine Learning", "Tableau"],
+    desc: "Analista para transformar datos complejos en insights accionables, construir dashboards interactivos y modelos predictivos de negocio.",
+    applied: 1,
+    top: 87,
+    status: "Activa",
+    color: "#7c3aed",
+  },
+  {
+    title: "Gerente de Proyectos TI",
+    dept: "PMO",
+    location: "Medellín, Colombia",
+    modality: "Presencial",
+    salary: "$7.000.000 – $10.000.000 COP",
+    exp: "5+ años",
+    skills: ["PMP", "Scrum", "Jira", "Gestión de presupuesto", "Liderazgo"],
+    desc: "Gerente para liderar proyectos tecnológicos de alto impacto, coordinando equipos multidisciplinarios y stakeholders clave de la organización.",
+    applied: 1,
+    top: 91,
+    status: "Activa",
+    color: "#0891b2",
+  },
+];
+
+const activities = [
+  { color: "#22c55e", text: <>CV de <strong>María Rodríguez</strong> analizado por IA</>, time: "Hace 12 min" },
+  { color: "#60a5fa", text: <>Vacante <strong>Full Stack</strong> recibió 3 nuevas postulaciones</>, time: "Hace 1 hora" },
+  { color: "#a78bfa", text: <>WhatsApp: <strong>Ana López</strong> completó preguntas de filtro</>, time: "Hace 2 horas" },
+  { color: "#f59e0b", text: <>Solicitud de vacante aprobada: <strong>Gerente TI</strong></>, time: "Hace 3 horas" },
+  { color: "#f87171", text: <>Email recibido con datos de vacante (ingesta automática)</>, time: "Hace 5 horas" },
+  { color: "#22c55e", text: <><strong>Laura Martínez</strong> preseleccionada para Gerente PMO</>, time: "Ayer" },
+];
+
+const waMessages = [
+  { from: "bot", text: "¡Hola! 👋 Soy el asistente de *Talent Intelligence*. Encontramos tu perfil y queremos conocerte mejor para la vacante de *Desarrollador Full Stack*. ¿Tienes un momento?", delay: 0 },
+  { from: "user", text: "¡Hola! Sí, claro.", delay: 1200 },
+  { from: "bot", text: "¡Perfecto! Voy a hacerte 4 preguntas rápidas. Primera: ¿Tienes experiencia con *Python* y *FastAPI*?", delay: 2400 },
+  { from: "user", text: "Sí, tengo 2 años trabajando con Python y FastAPI en proyectos de APIs REST.", delay: 3800 },
+  { from: "bot", text: "Excelente 💪. Segunda pregunta: ¿Cuántos años de experiencia total en desarrollo de software tienes?", delay: 5200 },
+  { from: "user", text: "2 años de experiencia, enfocada en frontend pero con algo de backend.", delay: 6600 },
+  { from: "bot", text: "Entendido. Tercera: ¿Cuál es tu expectativa salarial mensual en pesos colombianos?", delay: 8000 },
+  { from: "user", text: "Estoy esperando entre $4.000.000 y $5.000.000 COP.", delay: 9400 },
+  { from: "bot", text: "Perfecto, está dentro del rango 🎯. Última pregunta: ¿Estás disponible para trabajo en modalidad *híbrida* en Bogotá?", delay: 10800 },
+  { from: "user", text: "Sí, puedo trabajar híbrido sin problema. Estoy en Bogotá.", delay: 12200 },
+  { from: "bot", text: "¡Muchas gracias Ana! 🎉 Has completado el prefiltro satisfactoriamente. Un consultor de RRHH se pondrá en contacto contigo en los próximos 2 días hábiles. ¡Mucho éxito! 🍀", delay: 13600 },
+];
+
+const ranked = [
+  { idx: 0, rank: 1, score: 94, barColor: "#22c55e", barGrad: "linear-gradient(90deg,#16a34a,#22c55e)", borderColor: "#22c55e", skills: [["✓ Python","match"],["✓ React","match"],["✓ FastAPI","match"],["✓ Docker","match"]] },
+  { idx: 2, rank: 2, score: 72, barColor: "#60a5fa", barGrad: "linear-gradient(90deg,#1d4ed8,#60a5fa)", borderColor: "#60a5fa", skills: [["✓ React","match"],["✓ JavaScript","match"],["✗ Python","miss"],["✗ FastAPI","miss"]] },
+  { idx: 3, rank: 3, score: 68, barColor: "#f87171", barGrad: "linear-gradient(90deg,#b91c1c,#f87171)", borderColor: "#f87171", skills: [["✓ Python","match"],["✗ React","miss"],["✗ FastAPI","miss"],["✗ Docker","miss"]] },
+];
+
+// ─── HELPERS ────────────────────────────────────────────────────────────────
+
+function scoreColor(s) {
+  if (s >= 85) return "#22c55e";
+  if (s >= 70) return "#60a5fa";
+  return "#f87171";
+}
+
+function boldify(text) {
+  const parts = text.split(/\*(.*?)\*/g);
+  return parts.map((p, i) => i % 2 === 1 ? <strong key={i}>{p}</strong> : p);
+}
+
+// ─── STATUS BADGE ────────────────────────────────────────────────────────────
+
+function StatusBadge({ status }) {
+  const map = {
+    Preseleccionado: { bg: "#14532d", cl: "#86efac" },
+    "En revisión":  { bg: "#1e3a5f", cl: "#93c5fd" },
+    Descartado:     { bg: "#450a0a", cl: "#fca5a5" },
+    Activa:         { bg: "#1d4ed820", cl: "#60a5fa" },
+  };
+  const { bg, cl } = map[status] || { bg: "#1e293b", cl: "#94a3b8" };
+  return (
+    <span className="badge" style={{ background: bg, color: cl, fontSize: 11 }}>
+      {status}
+    </span>
+  );
+}
+
+// ─── SIDEBAR ─────────────────────────────────────────────────────────────────
+
+const navItems = [
+  { id: "dashboard", icon: "📊", label: "Dashboard" },
+  { id: "candidatos", icon: "👤", label: "Candidatos" },
+  { id: "vacantes",   icon: "💼", label: "Vacantes" },
+  { id: "matching",   icon: "🤖", label: "Matching IA" },
+  { id: "whatsapp",   icon: "💬", label: "WhatsApp Bot" },
+  { id: "stack",      icon: "⚙️", label: "Tecnología" },
+];
+
+function Sidebar({ view, setView }) {
+  return (
+    <aside className="sidebar">
+      <div className="sidebar-brand">
+        <div className="sidebar-logo">🧠</div>
+        <div className="sidebar-brand-text">
+          <div className="t1">Talent</div>
+          <div className="t2">Intelligence</div>
+        </div>
+      </div>
+
+      {navItems.map(item => (
+        <div
+          key={item.id}
+          className={`sidebar-item${view === item.id ? " active" : ""}`}
+          onClick={() => setView(item.id)}
+        >
+          <span className="icon">{item.icon}</span>
+          {item.label}
+        </div>
+      ))}
+
+      <div className="sidebar-user" style={{ marginTop: "auto" }}>
+        <div className="sidebar-avatar">AG</div>
+        <div>
+          <div className="sidebar-user-name">Ana García</div>
+          <div className="sidebar-user-role">Admin RRHH</div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+// ─── KPI CARD ────────────────────────────────────────────────────────────────
+
+function KPICard({ label, value, color, sub, subColor }) {
+  return (
+    <div className="stat-card">
+      <div className="stat-label">{label}</div>
+      <div className="stat-value" style={{ color }}>{value}</div>
+      <div className="stat-sub" style={{ color: subColor || "#22c55e" }}>{sub}</div>
+    </div>
+  );
+}
+
+// ─── DASHBOARD ───────────────────────────────────────────────────────────────
+
+function DashboardView({ setModal }) {
+  return (
+    <div>
+      <div className="page-header">
+        <h1 className="page-title">Panel Principal</h1>
+        <p className="page-sub">Resumen operacional del sistema de reclutamiento · Mayo 2026</p>
+      </div>
+
+      <div className="grid-4 mb-20">
+        <KPICard label="Candidatos"     value="127" color="#60a5fa" sub="↑ +14 este mes" />
+        <KPICard label="Vacantes Activas" value="8" color="#a78bfa" sub="2 urgentes" subColor="#f59e0b" />
+        <KPICard label="Postulaciones"  value="43"  color="#34d399" sub="↑ +8 esta semana" />
+        <KPICard label="Score IA Promedio" value="78%" color="#f97316" sub="↑ +5% vs anterior" />
+      </div>
+
+      <div className="grid-2-asym mb-20">
+        {/* Recent candidates */}
+        <div className="card" style={{ padding: 20 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "#f1f5f9", marginBottom: 16 }}>Candidatos Recientes</div>
+          <div className="flex-col gap-12">
+            {[0,1,4,2].map(i => {
+              const c = candidates[i];
+              const sc = scoreColor(c.score);
+              return (
+                <div
+                  key={i}
+                  style={{ display:"flex", alignItems:"center", gap:12, padding:10, background:"#0b1120", borderRadius:8, cursor:"pointer" }}
+                  onClick={() => setModal(i)}
+                >
+                  <div className="cand-avatar" style={{ background: c.color, width:38, height:38, fontSize:13 }}>{c.initials}</div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontSize:14, fontWeight:600, color:"#e2e8f0", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{c.name}</div>
+                    <div style={{ fontSize:12, color:"#475569" }}>{c.job} · {c.location.split(",")[0]}</div>
+                  </div>
+                  <div style={{ textAlign:"right", flexShrink:0 }}>
+                    <div style={{ fontSize:15, fontWeight:800, color:sc }}>{c.score}%</div>
+                    <div style={{ fontSize:11, color:"#475569" }}>match IA</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Activity feed */}
+        <div className="card" style={{ padding: 20 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "#f1f5f9", marginBottom: 16 }}>Actividad Reciente</div>
+          <div className="flex-col" style={{ gap: 14 }}>
+            {activities.map((a, i) => (
+              <div key={i} style={{ display:"flex", gap:12 }}>
+                <div className="activity-dot" style={{ background: a.color }}></div>
+                <div>
+                  <div style={{ fontSize:13, color:"#e2e8f0" }}>{a.text}</div>
+                  <div style={{ fontSize:11, color:"#475569", marginTop:2 }}>{a.time}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* WhatsApp stats */}
+      <div className="card" style={{ padding: 20 }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "#f1f5f9", marginBottom: 16 }}>Bot WhatsApp · Actividad de Prefiltro</div>
+        <div className="grid-4">
+          {[
+            { v:"34", l:"Conversaciones totales", c:"#25d366" },
+            { v:"21", l:"Completadas",            c:"#22c55e" },
+            { v:"8",  l:"En progreso",             c:"#f59e0b" },
+            { v:"5",  l:"Abandonadas",             c:"#f87171" },
+          ].map(({ v,l,c }) => (
+            <div key={l} style={{ textAlign:"center", padding:16, background:"#0b1120", borderRadius:10 }}>
+              <div style={{ fontSize:28, fontWeight:800, color:c }}>{v}</div>
+              <div style={{ fontSize:12, color:"#475569", marginTop:4 }}>{l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── CANDIDATE CARD ──────────────────────────────────────────────────────────
+
+function CandidateCard({ candidate: c, idx, onClick }) {
+  const [hovered, setHovered] = useState(false);
+  const sc = scoreColor(c.score);
+  return (
+    <div
+      className="card candidate-card"
+      style={{ "--card-accent": c.color, borderColor: hovered ? c.color : "#1e293b" }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={onClick}
+    >
+      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:14 }}>
+        <div className="cand-avatar" style={{ background: c.color }}>{c.initials}</div>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontSize:15, fontWeight:700, color:"#f1f5f9", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{c.name}</div>
+          <div style={{ fontSize:12, color:"#475569" }}>{c.job}</div>
+        </div>
+        <div style={{ textAlign:"right", flexShrink:0 }}>
+          <div style={{ fontSize:22, fontWeight:800, color:sc }}>{c.score}%</div>
+          <StatusBadge status={c.status} />
+        </div>
+      </div>
+
+      <div style={{ marginBottom:12 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, color:"#475569", marginBottom:5 }}>
+          <span>Compatibilidad IA</span>
+          <span style={{ color:sc }}>{c.score}%</span>
+        </div>
+        <div className="score-bar-wrap">
+          <div className="score-bar" style={{ width:`${c.score}%`, background:sc }}></div>
+        </div>
+      </div>
+
+      <div style={{ display:"flex", flexWrap:"wrap", gap:5, marginBottom:12 }}>
+        {c.skills.slice(0,4).map(s => <span key={s} className="tag">{s}</span>)}
+        {c.skills.length > 4 && <span className="tag">+{c.skills.length - 4}</span>}
+      </div>
+
+      <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, color:"#475569" }}>
+        <span>📍 {c.location.split(",")[0]}</span>
+        <span>💼 {c.exp} años exp.</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── CANDIDATOS VIEW ─────────────────────────────────────────────────────────
+
+function CandidatosView({ setModal }) {
+  return (
+    <div>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:24 }}>
+        <div>
+          <h1 className="page-title">Candidatos</h1>
+          <p className="page-sub">5 candidatos en el sistema demo</p>
+        </div>
+        <button className="btn btn-primary" onClick={() => alert("En la versión real: abre modal para subir CV (PDF/DOCX) y la IA lo analiza automáticamente.")}>
+          + Agregar Candidato
+        </button>
+      </div>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))", gap:16 }}>
+        {candidates.map((c,i) => (
+          <CandidateCard key={i} candidate={c} idx={i} onClick={() => setModal(i)} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── VACANCY CARD ────────────────────────────────────────────────────────────
+
+function VacancyCard({ v, onViewMatching }) {
+  const sc = scoreColor(v.top);
+  return (
+    <div className="card vacancy-card" style={{ borderColor: v.color + "30" }}>
+      <div style={{ display:"flex", alignItems:"start", justifyContent:"space-between", gap:16, flexWrap:"wrap" }}>
+        <div style={{ flex:1, minWidth:250 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8 }}>
+            <div style={{ fontSize:17, fontWeight:700, color:"#f1f5f9" }}>{v.title}</div>
+            <StatusBadge status={v.status} />
+          </div>
+          <div style={{ fontSize:13, color:"#475569", marginBottom:10 }}>
+            🏢 {v.dept} &nbsp;·&nbsp; 📍 {v.location} &nbsp;·&nbsp; 🏠 {v.modality} &nbsp;·&nbsp; ⏱ {v.exp}
+          </div>
+          <div style={{ fontSize:13, color:"#94a3b8", marginBottom:14, lineHeight:1.55 }}>{v.desc}</div>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+            {v.skills.map(s => <span key={s} className="tag">{s}</span>)}
+          </div>
+        </div>
+
+        <div style={{ textAlign:"center", minWidth:140 }}>
+          <div style={{ background:"#0b1120", borderRadius:10, padding:"14px 16px", marginBottom:10 }}>
+            <div style={{ fontSize:11, color:"#475569", marginBottom:4, textTransform:"uppercase", letterSpacing:".5px" }}>Salario</div>
+            <div style={{ fontSize:13, fontWeight:700, color:"#22c55e" }}>{v.salary}</div>
+          </div>
+          <div style={{ background:"#0b1120", borderRadius:10, padding:"10px 16px", marginBottom:10, display:"flex", justifyContent:"space-between", gap:12 }}>
+            <div style={{ textAlign:"center" }}>
+              <div style={{ fontSize:20, fontWeight:800, color:"#60a5fa" }}>{v.applied}</div>
+              <div style={{ fontSize:11, color:"#475569" }}>candidatos</div>
+            </div>
+            <div style={{ textAlign:"center" }}>
+              <div style={{ fontSize:20, fontWeight:800, color:sc }}>{v.top}%</div>
+              <div style={{ fontSize:11, color:"#475569" }}>mejor match</div>
+            </div>
+          </div>
+          <button className="btn btn-primary" style={{ width:"100%", justifyContent:"center", fontSize:13 }} onClick={onViewMatching}>
+            Ver matches IA
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── VACANTES VIEW ────────────────────────────────────────────────────────────
+
+function VacantesView({ setView }) {
+  return (
+    <div>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:24 }}>
+        <div>
+          <h1 className="page-title">Vacantes</h1>
+          <p className="page-sub">3 vacantes activas en el sistema demo</p>
+        </div>
+        <button className="btn btn-primary" onClick={() => alert("En la versión real: crea una vacante con descripción del cargo, habilidades requeridas, salario y la IA genera embeddings para el matching semántico.")}>
+          + Nueva Vacante
+        </button>
+      </div>
+      <div className="flex-col gap-16">
+        {vacancies.map((v, i) => (
+          <VacancyCard key={i} v={v} onViewMatching={() => setView("matching")} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── MATCHING VIEW ────────────────────────────────────────────────────────────
+
+function MatchingView({ setModal }) {
+  const steps = [
+    { icon:"📄", label:"1. Upload CV",    sub:"PDF / DOCX" },
+    { icon:"🔍", label:"2. Extracción",   sub:"PyMuPDF + spaCy" },
+    { icon:"🧠", label:"3. Análisis LLM", sub:"OpenAI / LM Studio" },
+    { icon:"📐", label:"4. Embeddings",   sub:"pgvector (PostgreSQL)" },
+    { icon:"🏆", label:"5. Ranking",      sub:"Similitud coseno" },
+  ];
+
+  return (
+    <div>
+      <div className="page-header">
+        <h1 className="page-title">Matching con Inteligencia Artificial</h1>
+        <p className="page-sub">Demostración: candidatos clasificados para la vacante "Desarrollador Full Stack"</p>
+      </div>
+
+      {/* Vacancy summary */}
+      <div className="card" style={{ padding:20, marginBottom:20, borderColor:"#1d4ed8" }}>
+        <div style={{ display:"flex", alignItems:"start", justifyContent:"space-between", gap:16 }}>
+          <div>
+            <div style={{ fontSize:17, fontWeight:700, color:"#60a5fa", marginBottom:6 }}>💼 Desarrollador Full Stack</div>
+            <div style={{ fontSize:13, color:"#475569", marginBottom:12 }}>Bogotá · Híbrido · $5.000.000 – $8.000.000 COP · 3+ años exp.</div>
+            <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+              {["Python","React","PostgreSQL","FastAPI","Docker"].map(s => <span key={s} className="tag">{s}</span>)}
+            </div>
+          </div>
+          <StatusBadge status="Activa" />
+        </div>
+      </div>
+
+      {/* How it works */}
+      <div className="card" style={{ padding:20, marginBottom:20, background:"#0b1120", borderStyle:"dashed", borderColor:"#1e293b" }}>
+        <div style={{ fontSize:14, fontWeight:700, color:"#a78bfa", marginBottom:14 }}>⚙️ Cómo funciona el Matching IA</div>
+        <div style={{ display:"flex", gap:0, overflowX:"auto", paddingBottom:4 }}>
+          {steps.map((s, i) => (
+            <React.Fragment key={i}>
+              <div style={{ textAlign:"center", flex:1, minWidth:100 }}>
+                <div style={{ width:44, height:44, background:"#1e293b", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 8px", fontSize:20 }}>{s.icon}</div>
+                <div style={{ fontSize:12, fontWeight:600, color:"#e2e8f0" }}>{s.label}</div>
+                <div style={{ fontSize:11, color:"#475569", marginTop:2 }}>{s.sub}</div>
+              </div>
+              {i < steps.length - 1 && (
+                <div style={{ alignSelf:"center", color:"#334155", fontSize:18, padding:"0 4px" }}>→</div>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+
+      {/* Ranked list */}
+      <div style={{ fontSize:15, fontWeight:700, color:"#f1f5f9", marginBottom:14 }}>Candidatos Clasificados por IA</div>
+      <div className="flex-col gap-12">
+        {ranked.map(r => {
+          const c = candidates[r.idx];
+          return (
+            <div key={r.rank} className="card rank-card" style={{ borderColor: r.borderColor + "40", opacity: r.rank === 3 ? 0.87 : 1 }}>
+              <div className="rank-accent" style={{ background: r.barColor }}></div>
+              <div style={{ display:"flex", alignItems:"center", gap:14, paddingLeft:8 }}>
+                <div style={{ fontSize:22, fontWeight:800, color:"#475569", width:28, textAlign:"center" }}>{r.rank}</div>
+                <div className="cand-avatar" style={{ background: c.color, width:44, height:44 }}>{c.initials}</div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:15, fontWeight:700, color:"#e2e8f0" }}>{c.name}</div>
+                  <div style={{ fontSize:12, color:"#475569", marginBottom:8 }}>{c.job} · {c.exp} años exp · {c.location.split(",")[0]}</div>
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
+                    {r.skills.map(([lbl,type]) => (
+                      <span key={lbl} className="tag" style={
+                        type === "match"
+                          ? { background:"#1d4ed820", borderColor:"#1d4ed840", color:"#60a5fa" }
+                          : { background:"#33303060", borderColor:"#33303080", color:"#94a3b8" }
+                      }>{lbl}</span>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ textAlign:"center", flexShrink:0, minWidth:72 }}>
+                  <div style={{ fontSize:28, fontWeight:800, color:r.barColor }}>{r.score}%</div>
+                  <div style={{ fontSize:11, color:"#475569" }}>compatibilidad</div>
+                  <div className="score-bar-wrap" style={{ marginTop:6 }}>
+                    <div className="score-bar" style={{ width:`${r.score}%`, background:r.barGrad }}></div>
+                  </div>
+                </div>
+                <button className="btn btn-outline" style={{ flexShrink:0, fontSize:13 }} onClick={() => setModal(r.idx)}>
+                  Ver perfil
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── WHATSAPP VIEW ────────────────────────────────────────────────────────────
+
+function WhatsAppView() {
+  const [msgs, setMsgs] = useState([]);
+  const [showTyping, setShowTyping] = useState(false);
+  const chatRef = useRef(null);
+  const started = useRef(false);
+
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+
+    waMessages.forEach((m, i) => {
+      setTimeout(() => {
+        if (m.from === "bot") {
+          setShowTyping(true);
+          setTimeout(() => {
+            setShowTyping(false);
+            setMsgs(prev => [...prev, m]);
+          }, 900);
+        } else {
+          setMsgs(prev => [...prev, m]);
+        }
+      }, m.delay + i * 150);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
+  }, [msgs, showTyping]);
+
+  const filterQs = [
+    { q: "Pregunta 1", text: "¿Tienes experiencia con Python y FastAPI?" },
+    { q: "Pregunta 2", text: "¿Cuántos años de experiencia en desarrollo web tienes?" },
+    { q: "Pregunta 3", text: "¿Cuál es tu expectativa salarial mensual en COP?" },
+    { q: "Pregunta 4", text: "¿Estás disponible para trabajo híbrido en Bogotá?" },
+  ];
+
+  const answers = [
+    { l:"Python / FastAPI",    v:"Sí, 2 años",       vc:"#22c55e" },
+    { l:"Años de experiencia", v:"2 años",            vc:"#e2e8f0" },
+    { l:"Expectativa salarial",v:"$4.500.000 COP",    vc:"#e2e8f0" },
+    { l:"Disponibilidad híbrido",v:"Sí, disponible",  vc:"#22c55e" },
+  ];
+
+  return (
+    <div>
+      <div className="page-header">
+        <h1 className="page-title">Bot de Prefiltro WhatsApp</h1>
+        <p className="page-sub">Conversación automatizada con candidatos · Vacante: Desarrollador Full Stack</p>
+      </div>
+
+      <div className="grid-2" style={{ alignItems:"start" }}>
+        {/* Chat */}
+        <div className="card" style={{ overflow:"hidden", padding:0 }}>
+          <div className="wa-chat-header">
+            <div style={{ width:38, height:38, background:"#25d366", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>🤖</div>
+            <div>
+              <div style={{ fontSize:14, fontWeight:700, color:"#fff" }}>Talent Intelligence Bot</div>
+              <div style={{ fontSize:12, color:"#25d366" }}>En línea</div>
+            </div>
+            <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:6 }}>
+              <div style={{ width:8, height:8, background:"#25d366", borderRadius:"50%" }}></div>
+              <span style={{ fontSize:12, color:"#25d366" }}>Activo</span>
+            </div>
+          </div>
+
+          <div className="wa-chat-body" ref={chatRef}>
+            {msgs.map((m, i) => (
+              <div key={i} className={m.from === "bot" ? "wa-row-in" : "wa-row-out"}>
+                <div className={m.from === "bot" ? "wa-bubble-in" : "wa-bubble-out"}>
+                  {boldify(m.text)}
+                </div>
+              </div>
+            ))}
+            {showTyping && (
+              <div className="wa-row-in">
+                <div className="typing">
+                  <span></span><span></span><span></span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="wa-chat-footer">
+            <div style={{ flex:1, background:"#2a3942", borderRadius:20, padding:"10px 14px", fontSize:13, color:"#8696a0" }}>
+              Escribe un mensaje...
+            </div>
+            <div
+              style={{ width:36, height:36, background:"#00a884", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, cursor:"pointer", flexShrink:0 }}
+              onClick={() => alert("El bot responde automáticamente. En la versión real está conectado vía webhook a la API de WhatsApp Business.")}
+            >▶️</div>
+          </div>
+        </div>
+
+        {/* Config & results */}
+        <div className="flex-col gap-16">
+          <div className="card" style={{ padding:18 }}>
+            <div style={{ fontSize:14, fontWeight:700, color:"#25d366", marginBottom:12 }}>✅ Preguntas de Prefiltro Configuradas</div>
+            <div className="flex-col gap-12">
+              {filterQs.map(fq => (
+                <div key={fq.q} style={{ padding:"10px 12px", background:"#0b1120", borderRadius:8, fontSize:13, color:"#e2e8f0", borderLeft:"3px solid #25d366" }}>
+                  <div style={{ fontSize:11, color:"#475569", marginBottom:2 }}>{fq.q}</div>
+                  {fq.text}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="card" style={{ padding:18 }}>
+            <div style={{ fontSize:14, fontWeight:700, color:"#f1f5f9", marginBottom:12 }}>📋 Respuestas Capturadas – Ana López</div>
+            <div className="flex-col" style={{ gap:8 }}>
+              {answers.map(a => (
+                <div key={a.l} style={{ display:"flex", justifyContent:"space-between", fontSize:13, padding:"8px 10px", background:"#0b1120", borderRadius:6 }}>
+                  <span style={{ color:"#94a3b8" }}>{a.l}</span>
+                  <span style={{ color:a.vc, fontWeight:600 }}>{a.v}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop:12, padding:"10px 12px", background:"#14532d", borderRadius:8, fontSize:13, color:"#86efac", display:"flex", alignItems:"center", gap:8 }}>
+              <span>✅</span> Candidata aprobó el prefiltro automático
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── STACK VIEW ───────────────────────────────────────────────────────────────
+
+function StackView() {
+  const arch = [
+    { emoji:"⚛️", label:"React 19",    sub:"Vite + Mantine",   border:"#1d4ed8", color:"#60a5fa" },
+    { emoji:"🐍", label:"FastAPI",      sub:"Python 3.11",      border:"#7c3aed", color:"#a78bfa" },
+    { emoji:"🗃️", label:"PostgreSQL",  sub:"+ pgvector",       border:"#0891b2", color:"#22d3ee" },
+    { emoji:"🧠", label:"OpenAI / LLM",sub:"GPT-4 · LM Studio",border:"#d97706", color:"#fbbf24" },
+    { emoji:"💬", label:"WhatsApp",    sub:"Business API",      border:"#25d366", color:"#25d366" },
+  ];
+
+  const frontend = [
+    ["React 19 + Vite 8","Framework UI"],
+    ["Mantine 9","Componentes UI"],
+    ["TailwindCSS 3.4","Estilos"],
+    ["pdfjs-dist + Mammoth","Lectura PDF/DOCX"],
+    ["XLSX 0.18","Importar Excel"],
+    ["React Context API","Estado global"],
+  ];
+
+  const backend = [
+    ["FastAPI 0.109","REST API async"],
+    ["SQLAlchemy 2.0","ORM / Migraciones"],
+    ["spaCy 3.7","NLP / entidades"],
+    ["PyMuPDF + PyPDF2","Extracción de texto CV"],
+    ["scikit-learn 1.4","ML / similitud"],
+    ["Passlib + JWT","Autenticación segura"],
+  ];
+
+  const ai = [
+    { t:"Extracción de datos del CV", d:"LLM analiza texto crudo y extrae: nombre, experiencia, habilidades, educación, historial laboral" },
+    { t:"Análisis de Fortalezas/Debilidades", d:"GPT-4 / LM Studio genera análisis cualitativo del candidato vs. el perfil de la vacante" },
+    { t:"Embeddings Semánticos", d:"Vectores 1536-dim (text-embedding-3-small) almacenados en pgvector para búsqueda semántica" },
+    { t:"Ranking por Similitud Coseno", d:"Distancia vectorial entre CV y vacante = score de compatibilidad (%)" },
+  ];
+
+  const integrations = [
+    { icon:"💬", label:"WhatsApp Business API", sub:"Bot de prefiltro con preguntas configurables por vacante · Webhook vía ngrok", color:"#25d366" },
+    { icon:"📧", label:"Gmail / Resend", sub:"Ingesta de vacantes por email · Notificaciones automáticas a candidatos", color:"#60a5fa" },
+    { icon:"🐳", label:"Docker Compose", sub:"PostgreSQL 15 + pgvector · FastAPI · React · ngrok en contenedores", color:"#0ea5e9" },
+    { icon:"🔐", label:"Auth Roles", sub:"master · admin_rrhh · asistente_rrhh · solicitante · JWT + bcrypt", color:"#a78bfa" },
+  ];
+
+  const flow = [
+    { icon:"📝", label:"Solicitud", sub:"Jefe solicita nueva vacante" },
+    { icon:"💼", label:"Vacante", sub:"RRHH crea vacante con IA" },
+    { icon:"📱", label:"WhatsApp", sub:"Bot prefiltro automático" },
+    { icon:"📄", label:"CV Upload", sub:"Candidato sube su CV" },
+    { icon:"🧠", label:"Análisis IA", sub:"Extracción + Embeddings" },
+    { icon:"🏆", label:"Ranking", sub:"Score & clasificación", accent:"#22c55e" },
+  ];
+
+  return (
+    <div>
+      <div className="page-header">
+        <h1 className="page-title">¿Cómo funciona Talent Intelligence?</h1>
+        <p className="page-sub">Descripción del stack tecnológico y las capacidades del sistema</p>
+      </div>
+
+      {/* Architecture */}
+      <div className="card" style={{ padding:24, marginBottom:20, background:"linear-gradient(135deg,#0b1120 0%,#111827 100%)", borderColor:"#1e293b" }}>
+        <div style={{ fontSize:16, fontWeight:700, color:"#f1f5f9", marginBottom:6 }}>🏗️ Arquitectura General</div>
+        <div style={{ fontSize:14, color:"#94a3b8", marginBottom:20 }}>Sistema distribuido con frontend React, backend FastAPI y base de datos vectorial</div>
+        <div style={{ display:"flex", gap:10, alignItems:"center", flexWrap:"wrap" }}>
+          {arch.map((n, i) => (
+            <React.Fragment key={n.label}>
+              <div className="stack-node" style={{ border:`1px solid ${n.border}` }}>
+                <div style={{ fontSize:22, marginBottom:6 }}>{n.emoji}</div>
+                <div style={{ fontSize:13, fontWeight:700, color:n.color }}>{n.label}</div>
+                <div style={{ fontSize:11, color:"#475569", marginTop:2 }}>{n.sub}</div>
+              </div>
+              {i < arch.length - 1 && <div style={{ color:"#334155", fontSize:22 }}>⟷</div>}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+
+      {/* Frontend + Backend */}
+      <div className="grid-2 mb-16">
+        <div className="card" style={{ padding:20 }}>
+          <div style={{ fontSize:15, fontWeight:700, color:"#60a5fa", marginBottom:14 }}>⚛️ Frontend</div>
+          <div className="flex-col gap-12">
+            {frontend.map(([k,v]) => (
+              <div key={k} style={{ display:"flex", justifyContent:"space-between", fontSize:13 }}>
+                <span style={{ color:"#e2e8f0", fontWeight:600 }}>{k}</span>
+                <span style={{ color:"#475569" }}>{v}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="card" style={{ padding:20 }}>
+          <div style={{ fontSize:15, fontWeight:700, color:"#a78bfa", marginBottom:14 }}>🐍 Backend</div>
+          <div className="flex-col gap-12">
+            {backend.map(([k,v]) => (
+              <div key={k} style={{ display:"flex", justifyContent:"space-between", fontSize:13 }}>
+                <span style={{ color:"#e2e8f0", fontWeight:600 }}>{k}</span>
+                <span style={{ color:"#475569" }}>{v}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* AI + Integrations */}
+      <div className="grid-2 mb-16">
+        <div className="card" style={{ padding:20 }}>
+          <div style={{ fontSize:15, fontWeight:700, color:"#fbbf24", marginBottom:14 }}>🧠 Inteligencia Artificial</div>
+          <div className="flex-col gap-12">
+            {ai.map(a => (
+              <div key={a.t} style={{ padding:"10px 12px", background:"#0b1120", borderRadius:8, fontSize:13 }}>
+                <div style={{ color:"#fbbf24", fontWeight:600, marginBottom:3 }}>{a.t}</div>
+                <div style={{ color:"#475569" }}>{a.d}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="card" style={{ padding:20 }}>
+          <div style={{ fontSize:15, fontWeight:700, color:"#34d399", marginBottom:14 }}>🔌 Integraciones</div>
+          <div className="flex-col gap-12">
+            {integrations.map(it => (
+              <div key={it.label} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 12px", background:"#0b1120", borderRadius:8 }}>
+                <div style={{ fontSize:22, flexShrink:0 }}>{it.icon}</div>
+                <div>
+                  <div style={{ fontSize:13, fontWeight:600, color:it.color }}>{it.label}</div>
+                  <div style={{ fontSize:12, color:"#475569" }}>{it.sub}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Full flow */}
+      <div className="card" style={{ padding:20 }}>
+        <div style={{ fontSize:15, fontWeight:700, color:"#f1f5f9", marginBottom:16 }}>🔄 Flujo Completo del Sistema</div>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:8, textAlign:"center" }}>
+          {flow.map((s, i) => (
+            <React.Fragment key={s.label}>
+              <div className="flow-step" style={s.accent ? { border:`1px solid ${s.accent}40` } : {}}>
+                <div style={{ fontSize:24, marginBottom:8 }}>{s.icon}</div>
+                <div style={{ fontSize:12, fontWeight:700, color: s.accent || "#e2e8f0" }}>{s.label}</div>
+                <div style={{ fontSize:11, color:"#475569", marginTop:4 }}>{s.sub}</div>
+              </div>
+              {i < flow.length - 1 && (
+                <div style={{ alignSelf:"center", color:"#334155", fontSize:18, textAlign:"center" }}>➜</div>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── CANDIDATE MODAL ──────────────────────────────────────────────────────────
+
+function CandidateModal({ idx, onClose }) {
+  const c = candidates[idx];
+  const sc = scoreColor(c.score);
+  return (
+    <div className="modal-bg" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal">
+        <div className="modal-header">
+          <span className="modal-title">{c.name}</span>
+          <button className="btn btn-outline" style={{ padding:"6px 12px", fontSize:13 }} onClick={onClose}>✕ Cerrar</button>
+        </div>
+        <div className="modal-body">
+          <div className="grid-2" style={{ marginBottom:16 }}>
+            <div>
+              <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:14 }}>
+                <div className="cand-avatar" style={{ background:c.color, width:56, height:56, fontSize:20 }}>{c.initials}</div>
+                <div>
+                  <div style={{ fontSize:16, fontWeight:700, color:"#f1f5f9" }}>{c.name}</div>
+                  <div style={{ fontSize:13, color:"#475569" }}>{c.job}</div>
+                  <div style={{ fontSize:12, color:"#94a3b8" }}>{c.education}</div>
+                </div>
+              </div>
+              <div className="flex-col" style={{ gap:6, fontSize:13 }}>
+                <div style={{ color:"#94a3b8" }}>📧 {c.email}</div>
+                <div style={{ color:"#94a3b8" }}>📱 {c.phone}</div>
+                <div style={{ color:"#94a3b8" }}>📍 {c.location}</div>
+                <div style={{ color:"#94a3b8" }}>💼 {c.exp} años de experiencia</div>
+              </div>
+            </div>
+            <div style={{ background:"#0b1120", borderRadius:10, padding:16, textAlign:"center" }}>
+              <div style={{ fontSize:11, color:"#475569", textTransform:"uppercase", letterSpacing:".5px", marginBottom:8 }}>Score de Compatibilidad IA</div>
+              <div style={{ fontSize:52, fontWeight:900, color:sc, lineHeight:1 }}>{c.score}%</div>
+              <div className="score-bar-wrap" style={{ margin:"12px 0 8px" }}>
+                <div className="score-bar" style={{ width:`${c.score}%`, background:sc }}></div>
+              </div>
+              <div style={{ fontSize:12, color:"#475569" }}>Vacante: {c.vacancy}</div>
+              <div style={{ marginTop:10 }}><StatusBadge status={c.status} /></div>
+            </div>
+          </div>
+
+          <div style={{ marginBottom:14 }}>
+            <div style={{ fontSize:13, fontWeight:600, color:"#f1f5f9", marginBottom:8 }}>Habilidades</div>
+            <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+              {c.skills.map(s => <span key={s} className="tag">{s}</span>)}
+            </div>
+          </div>
+
+          <div className="grid-2" style={{ marginBottom:14 }}>
+            <div>
+              <div style={{ fontSize:13, fontWeight:600, color:"#22c55e", marginBottom:8 }}>✅ Fortalezas</div>
+              {c.strengths.map(s => (
+                <div key={s} style={{ fontSize:13, color:"#94a3b8", padding:"6px 10px", background:"#0b1120", borderRadius:6, marginBottom:6, borderLeft:"3px solid #22c55e" }}>• {s}</div>
+              ))}
+            </div>
+            <div>
+              <div style={{ fontSize:13, fontWeight:600, color:"#f59e0b", marginBottom:8 }}>⚠️ Áreas a mejorar</div>
+              {c.weaknesses.map(w => (
+                <div key={w} style={{ fontSize:13, color:"#94a3b8", padding:"6px 10px", background:"#0b1120", borderRadius:6, marginBottom:6, borderLeft:"3px solid #f59e0b" }}>• {w}</div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ background:"#0b1120", borderRadius:10, padding:"14px 16px", border:"1px solid #1d4ed830" }}>
+            <div style={{ fontSize:13, fontWeight:600, color:"#60a5fa", marginBottom:6 }}>🤖 Recomendación de la IA</div>
+            <div style={{ fontSize:13, color:"#94a3b8", lineHeight:1.6 }}>{c.recommendation}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── APP ──────────────────────────────────────────────────────────────────────
+
+function App() {
+  const [view, setView] = useState("dashboard");
+  const [modal, setModal] = useState(null);
+
+  const handleSetView = (v) => {
+    setView(v);
+    setModal(null);
+  };
+
+  return (
+    <div className="app-shell">
+      <Sidebar view={view} setView={handleSetView} />
+      <main className="main">
+        {view === "dashboard"  && <DashboardView setModal={setModal} />}
+        {view === "candidatos" && <CandidatosView setModal={setModal} />}
+        {view === "vacantes"   && <VacantesView setView={handleSetView} />}
+        {view === "matching"   && <MatchingView setModal={setModal} />}
+        {view === "whatsapp"   && <WhatsAppView />}
+        {view === "stack"      && <StackView />}
+      </main>
+
+      {modal !== null && <CandidateModal idx={modal} onClose={() => setModal(null)} />}
+
+      <div className="demo-topbar">
+        <a href="../../index.html#proyectos">← Volver al portafolio</a>
+        <div className="demo-topbar-sep"></div>
+        <span className="demo-topbar-label">⚡ DEMO — datos de ejemplo</span>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

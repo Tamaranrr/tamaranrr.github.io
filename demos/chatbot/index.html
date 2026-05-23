@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chatbot IA — n8n + Embeddings Vectoriales</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="chatbot.css" />
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ─── KNOWLEDGE BASE (datos quemados) ────────────────────────────────────────
+const KB = [
+  // RENTAS
+  { id:"r1", cat:"renta", icon:"🚗",
+    title:"Categorías y precios de vehículos",
+    content:"5 categorías disponibles: Económico desde $25/día (Hyundai i10, VW Gol), Compacto desde $35/día (Toyota Corolla, Honda Civic), SUV desde $55/día (RAV4, Tucson), Premium desde $85/día (BMW Serie 3, Mercedes C), Camioneta/Pickup desde $75/día (Hilux, Ford Ranger). Todos con kilometraje ilimitado.",
+    tags:["autos","vehiculos","categorias","precio","costo","economico","suv","pickup","flota","tipos","carros","cuanto","alquilar","renta","disponible"] },
+
+  { id:"r2", cat:"renta", icon:"📋",
+    title:"Requisitos para alquilar",
+    content:"Necesitas: licencia de conducir vigente (acepta licencias extranjeras), pasaporte o identificación, tarjeta de crédito o débito a tu nombre, mínimo 21 años de edad. Conductores entre 21–24 tienen cargo adicional de $15/día. Depósito de garantía: $200–$500 según categoría.",
+    tags:["requisitos","documentos","edad","tarjeta","licencia","alquilar","renta","necesito","garantia","deposito","que necesito","minimo"] },
+
+  { id:"r3", cat:"renta", icon:"🛡️",
+    title:"Seguros y coberturas disponibles",
+    content:"Opciones de seguro: Básico incluido (daños a terceros), CDW $8/día (daños al vehículo), PAI $5/día (seguro personal al viajero), SCDW $15/día sin deducible — recomendado para aventura. Nota: tarjetas Visa/MC Gold incluyen CDW automáticamente al pagar con tarjeta.",
+    tags:["seguro","cobertura","cdw","danos","proteccion","deducible","scdw","pai","accidente","poliza","vale la pena"] },
+
+  { id:"r4", cat:"renta", icon:"📍",
+    title:"Oficinas y destinos disponibles",
+    content:"Oficinas en aeropuertos: Las Vegas (LAS), Cancún (CUN), Miami (MIA), Bogotá El Dorado (BOG), Ciudad de México (MEX), San José Costa Rica (SJO). Servicio 24/7 en todos los aeropuertos. Entrega/recogida en hotel disponible con cargo de $25.",
+    tags:["oficinas","ubicacion","aeropuerto","sucursal","donde","ciudad","pais","colombia","mexico","usa","costa rica","entrega","hotel","recogida"] },
+
+  // PROMOCIONES
+  { id:"p1", cat:"promo", icon:"🎉",
+    title:"Promo Flash — 20% OFF Mayo 2026",
+    content:"20% de descuento en TODAS las categorías. Código: MAYO20. Reservas del 22–31 mayo 2026, mínimo 3 días de renta, reserva online exclusivamente. Aplica en Las Vegas, Cancún, Miami y Bogotá. No acumulable con otras ofertas.",
+    tags:["promocion","descuento","oferta","mayo","flash","codigo","promo","rebaja","2026","especial","veinte porciento"] },
+
+  { id:"p2", cat:"promo", icon:"☀️",
+    title:"Tarifa Verano — Reserva con Anticipación",
+    content:"Reserva con 30+ días de anticipación para temporada jun–ago 2026: 15% OFF en compactos y SUV, CDW gratis el primer día, kilometraje ilimitado garantizado en destinos de playa. Código: SUMMER15. Tarifa no reembolsable.",
+    tags:["verano","temporada","anticipacion","descuento","playa","kilometraje","reserva","junio","julio","agosto","summer","anticipado","vacaciones"] },
+
+  { id:"p3", cat:"promo", icon:"🏢",
+    title:"Plan Empresarial — Renting Corporativo",
+    content:"Para empresas con necesidad de +5 vehículos/mes: tarifas negociadas desde $20/día, facturación mensual consolidada, reemplazo garantizado en menos de 2h, mantenimiento preventivo incluido, conductor asignado disponible. Contacto: corporativo@milescr.com",
+    tags:["empresa","corporativo","negocio","flota","renting","factura","b2b","empresarial","corporacion","compania","facturacion"] },
+
+  // DESTINOS TURÍSTICOS
+  { id:"d1", cat:"destino", icon:"🎰",
+    title:"Las Vegas — Guía de Viaje",
+    content:"Desde el Strip en auto: Gran Cañón South Rim (460 km, 4h), Death Valley (220 km, 2h), Zion NP (260 km, 2.5h), Area 51 (230 km, 2.5h), Lake Mead (50 km, 40min). Temperatura verano 38–42°C — A/C esencial. Parking gratuito en la mayoría de casinos del Strip.",
+    tags:["las vegas","nevada","gran canon","strip","casino","desierto","excursion","zion","death valley","area 51","lake mead","nevada"] },
+
+  { id:"d2", cat:"destino", icon:"🌴",
+    title:"Cancún y Riviera Maya",
+    content:"Desde Cancún en auto: Playa del Carmen (68 km, 45min), Tulum (130 km, 1.5h), Cobá (175 km, 2h), Chichén Itzá (198 km, 2.5h), Bacalar (340 km, 3.5h). Carreteras en excelente estado. SUV recomendado para cenotes fuera de ruta principal.",
+    tags:["cancun","riviera maya","tulum","playa del carmen","mexico","cenotes","yucatan","caribe","playa","chichen itza","bacalar","caribe"] },
+
+  { id:"d3", cat:"destino", icon:"🌊",
+    title:"Miami y Florida Keys",
+    content:"Miami en auto: South Beach (5 min del aeropuerto), Wynwood (15 min), Everglades (45min). Road trip a los Keys: Key Largo (60 km), Key West (250 km, 3h por US-1). Convertible ideal para los Keys, SUV para Everglades. Evitar I-95 en hora pico (7–9am, 5–7pm).",
+    tags:["miami","florida","keys","south beach","wynwood","road trip","convertible","everglades","key west","ocean drive","usa"] },
+
+  { id:"d4", cat:"destino", icon:"⛰️",
+    title:"Bogotá y Alrededores",
+    content:"Escapadas desde Bogotá: Zipaquirá/Catedral de Sal (49 km, 1h), Villa de Leyva (185 km, 3h), Laguna de Guatavita (75 km, 1.5h), Melgar/Honda (160 km, 2.5h), San Gil aventura (330 km, 5h). Recomendamos 4x4 para zonas rurales. Altitud 2600m — revisar presión de llantas.",
+    tags:["bogota","colombia","zipaquira","villa de leyva","montana","altiplano","guatavita","san gil","melgar","capital","4x4"] },
+
+  // BLOG / GUÍAS
+  { id:"b1", cat:"blog", icon:"📝",
+    title:"5 Tips para Rentar un Auto en el Extranjero",
+    content:"1) Reserva online 2+ semanas antes para mejores precios. 2) Verifica si tu tarjeta incluye CDW automático. 3) Fotografía/video del auto antes de salir. 4) Llena el tanque antes de devolver — cobran doble si va vacío. 5) Guarda la reserva digital en el celular.",
+    tags:["tips","consejos","extranjero","reserva","tanque","fotos","tarjeta","seguro","recomendaciones","guia","como","antes"] },
+
+  { id:"b2", cat:"blog", icon:"🗺️",
+    title:"Road Trip Las Vegas → Gran Cañón en 2 Días",
+    content:"Día 1: Las Vegas → Valley of Fire (50min) → Zion NP (2.5h, noche en Springdale). Día 2: Bryce Canyon → Page AZ → Gran Cañón South Rim. Total 620 km. Llevar 4+ litros de agua por persona — tramos sin gasolineras de 80+ km. Mejor época: sep–nov y mar–may.",
+    tags:["road trip","gran canon","las vegas","zion","bryce canyon","ruta","itinerario","nevada","arizona","valle de fuego","excursion"] },
+
+  { id:"b3", cat:"blog", icon:"🌮",
+    title:"Gastronomía y Cultura en la Riviera Maya",
+    content:"Con auto accedes a: mercados de Valladolid, cochinita pibil auténtica en Mérida, mariscos en Progreso, cenotes off-road en José María Morelos. Los pueblos mágicos Izamal y Maní no están en rutas de tour — el auto es la clave para la experiencia auténtica.",
+    tags:["gastronomia","cultura","riviera maya","comida","mercados","pueblos magicos","yucatan","mayas","merida","valladolid","autentico"] },
+
+  { id:"b4", cat:"blog", icon:"💡",
+    title:"¿Vale la Pena el Seguro Extra en el Auto Rentado?",
+    content:"Visa/MC Gold incluyen CDW básico pero excluyen llantas, cristales y partes inferiores del vehículo. Para aventura o rutas sin pavimentar, el SCDW ($15/día) evita gastos de $500–$2000. Si el auto cuesta +$60/día, el SCDW es solo el 25% — definitivamente vale la pena.",
+    tags:["seguro","cdw","tarjeta de credito","visa","mastercard","deducible","vale la pena","analisis","consejo","cobertura","gastos"] },
+];
+
+// ─── FLUJO n8n ────────────────────────────────────────────────────────────────
+const FLOW_STEPS = [
+  { id:'webhook', label:'Webhook Trigger',   icon:'🔔', desc:'Recibe consulta del usuario'      },
+  { id:'embed',   label:'Embed Query',        icon:'🧠', desc:'OpenAI text-embedding-3-small'    },
+  { id:'search',  label:'Vector Search',      icon:'🔍', desc:'pgvector · similitud coseno'      },
+  { id:'context', label:'Build Context',      icon:'📋', desc:'Top-K docs → prompt template'    },
+  { id:'llm',     label:'GPT-4o Mini',         icon:'🤖', desc:'Genera respuesta contextual'     },
+  { id:'respond', label:'Return Response',   icon:'✅', desc:'Envía respuesta al usuario'       },
+];
+
+const QUICK_REPLIES = [
+  { label:'🎉 ¿Qué promociones tienen?',        query:'promociones descuentos oferta codigo' },
+  { label:'🚗 ¿Cuánto cuesta alquilar?',         query:'precio costo categorias autos cuanto alquilar' },
+  { label:'🏖️ Destinos en el Caribe',            query:'cancun riviera maya caribe playa tulum' },
+  { label:'📋 ¿Qué documentos necesito?',        query:'documentos requisitos licencia edad' },
+  { label:'✈️ Oficinas en el aeropuerto',        query:'aeropuerto oficinas ubicacion sucursal' },
+  { label:'🗺️ Road trip Las Vegas–Gran Cañón',  query:'road trip las vegas gran canon itinerario ruta' },
+];
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function normalize(s) {
+  return s.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[¿?¡!.,;:()]/g, ' ');
+}
+
+function vectorSearch(query, topK = 3) {
+  const words = normalize(query).split(/\s+/).filter(w => w.length > 2);
+  if (!words.length) return [];
+
+  const scored = KB.map(chunk => {
+    let score = 0;
+    const nTitle   = normalize(chunk.title);
+    const nContent = normalize(chunk.content);
+    const nTags    = chunk.tags.map(normalize);
+
+    words.forEach(w => {
+      nTags.forEach(t => {
+        if (t === w)                              score += 3;
+        else if (t.includes(w) || w.includes(t)) score += 1.5;
+      });
+      if (nTitle.includes(w))   score += 2;
+      if (nContent.includes(w)) score += 0.8;
+    });
+
+    const maxScore  = words.length * 6.8;
+    const rawNorm   = Math.min(score / maxScore, 1);
+    const similarity = score > 0
+      ? parseFloat((0.51 + rawNorm * 0.47).toFixed(2))
+      : 0;
+
+    return { ...chunk, similarity, rawScore: score };
+  });
+
+  return scored
+    .filter(c => c.rawScore > 0)
+    .sort((a, b) => b.similarity - a.similarity)
+    .slice(0, topK);
+}
+
+function buildResponse(chunks) {
+  if (!chunks.length) {
+    return {
+      text: 'No encontré información específica sobre eso en nuestra base de conocimiento. Puedo ayudarte con rentas de autos, promociones activas, destinos turísticos o guías de viaje. ¿Sobre qué te gustaría saber más?',
+      chunks: [],
+    };
+  }
+  const cat = chunks[0].cat;
+  const n   = chunks.length;
+  const texts = {
+    promo:   `¡Encontré ${n} promoción${n>1?'es':''} que te pueden interesar!`,
+    destino: `Tengo info sobre ${n} destino${n>1?'s turísticos':' turístico'} para ti:`,
+    blog:    `Encontré ${n} artículo${n>1?'s':''} en nuestro blog sobre ese tema:`,
+    renta:   'Aquí tienes la información sobre nuestro servicio de renta:',
+  };
+  return { text: texts[cat] || 'Encontré esto en nuestra base de conocimiento:', chunks };
+}
+
+// Renderiza **negrita** en el texto
+function RichText({ text }) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return (
+    <>
+      {parts.map((p, i) =>
+        p.startsWith('**') && p.endsWith('**')
+          ? <strong key={i}>{p.slice(2,-2)}</strong>
+          : p
+      )}
+    </>
+  );
+}
+
+// ─── HELPERS DE PARSEO ───────────────────────────────────────────────────────
+
+function splitOutsideParens(str) {
+  const result = [];
+  let depth = 0, current = '';
+  for (const ch of str) {
+    if (ch === '(') depth++;
+    else if (ch === ')') depth--;
+    else if (ch === ',' && depth === 0) { result.push(current.trim()); current = ''; continue; }
+    current += ch;
+  }
+  if (current.trim()) result.push(current.trim());
+  return result;
+}
+
+// ─── COMPONENTES ─────────────────────────────────────────────────────────────
+
+function InfoCard({ chunk }) {
+  const CONFIG = {
+    promo:   { label: 'Promoción'         },
+    destino: { label: 'Destino turístico' },
+    blog:    { label: 'Artículo del blog' },
+    renta:   { label: 'Renta de autos'   },
+  };
+
+  // Código de promo
+  const promoCode = chunk.cat === 'promo'
+    ? (chunk.content.match(/Código:\s*([A-Z0-9]+)/) || [])[1] || null
+    : null;
+
+  // Chips de destino: "Nombre (X km, Xh)"
+  const destChips = chunk.cat === 'destino' ? (() => {
+    const ci = chunk.content.indexOf(':');
+    if (ci === -1) return [];
+    const part = chunk.content.slice(ci + 1).split('.')[0];
+    return splitOutsideParens(part)
+      .map(s => { const m = s.trim().match(/^([^(]+?)\s*\(([^)]+)\)$/); return m ? { name: m[1].trim(), dist: m[2].trim() } : null; })
+      .filter(Boolean).slice(0, 4);
+  })() : [];
+
+  // Tips numerados en blogs: "1) ... 2) ..."
+  const blogTips = chunk.cat === 'blog' && /^\s*1\)/.test(chunk.content)
+    ? chunk.content.split(/\s*\d+\)\s*/).slice(1).map(s => s.replace(/\s*\.\s*$/, '').trim()).filter(Boolean).slice(0, 4)
+    : [];
+
+  // Chips de precio para renta
+  const rentaChips = chunk.cat === 'renta' ? (() => {
+    const chips = [];
+    for (const m of chunk.content.matchAll(/([A-Za-záéíóú\/]+)\s+desde\s+(\$\d+\/día)/g))
+      chips.push(`${m[1]} ${m[2]}`);
+    for (const m of chunk.content.matchAll(/\b([A-Z]{2,5})\s+(\$\d+\/día)/g))
+      chips.push(`${m[1]} ${m[2]}`);
+    return chips.slice(0, 5);
+  })() : [];
+
+  return (
+    <div className={`info-card ${chunk.cat}`}>
+      <div className="card-band">
+        <span className="card-band-icon">{chunk.icon}</span>
+        <div className="card-band-info">
+          <span className="card-band-title">{chunk.title}</span>
+          <span className="card-band-tag">{CONFIG[chunk.cat].label}</span>
+        </div>
+      </div>
+      <div className="card-body">
+        {blogTips.length > 0 ? (
+          <ul className="blog-tip-list">
+            {blogTips.map((tip, i) => (
+              <li key={i} className="blog-tip-item">
+                <span className="blog-tip-num">{i + 1}</span>
+                <span>{tip}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="card-content">{chunk.content}</p>
+        )}
+
+        {promoCode && (
+          <div className="promo-code-row">
+            <div className="promo-code-badge">
+              <span className="promo-code-label">Código</span>
+              <span className="promo-code-sep">→</span>
+              <span className="promo-code-value">{promoCode}</span>
+            </div>
+          </div>
+        )}
+
+        {destChips.length > 0 && (
+          <div className="dest-chips">
+            {destChips.map((d, i) => (
+              <span key={i} className="dest-chip">📍 {d.name} · {d.dist}</span>
+            ))}
+          </div>
+        )}
+
+        {rentaChips.length > 0 && (
+          <div className="renta-prices">
+            {rentaChips.map((p, i) => (
+              <span key={i} className="renta-price-chip">✦ {p}</span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BotMessage({ msg }) {
+  return (
+    <div className="msg-row bot">
+      <div className="msg-avatar bot">🚗</div>
+      <div style={{ maxWidth:'72%' }}>
+        <div className="msg-bubble bot">
+          <RichText text={msg.text} />
+        </div>
+        {msg.chunks && msg.chunks.length > 0 && (
+          <div className="cards-grid">
+            {msg.chunks.map(c => <InfoCard key={c.id} chunk={c} />)}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function UserMessage({ text }) {
+  return (
+    <div className="msg-row user">
+      <div className="msg-avatar user">TÚ</div>
+      <div className="msg-bubble user">{text}</div>
+    </div>
+  );
+}
+
+function TypingIndicator() {
+  return (
+    <div className="msg-row bot">
+      <div className="msg-avatar bot">🚗</div>
+      <div className="msg-bubble bot" style={{ padding:'0.55rem 1rem' }}>
+        <div className="typing-dots">
+          <div className="typing-dot"></div>
+          <div className="typing-dot"></div>
+          <div className="typing-dot"></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── N8N FLOW ─────────────────────────────────────────────────────────────────
+function N8nFlow({ activeStep, isTyping, hasProcessed }) {
+  const getStepIdx = () => {
+    if (!hasProcessed && !isTyping) return -1;   // sin consultas aún
+    if (!isTyping && hasProcessed)  return FLOW_STEPS.length; // todo hecho
+    return FLOW_STEPS.findIndex(s => s.id === activeStep);
+  };
+  const stepIdx = getStepIdx();
+
+  return (
+    <div className="flow-nodes">
+      {FLOW_STEPS.map((step, i) => {
+        const isDone       = i < stepIdx;
+        const isProcessing = isTyping && i === stepIdx;
+        const isIdle       = !hasProcessed && !isTyping;
+
+        return (
+          <div className="flow-node" key={step.id}>
+            <div className="node-connector">
+              <div className={`node-dot ${isProcessing ? 'processing' : isDone ? 'done' : ''}`} />
+              {i < FLOW_STEPS.length - 1 && (
+                <div className={`node-line ${isDone ? 'done' : ''}`} />
+              )}
+            </div>
+            <div className={`node-card ${isProcessing ? 'processing' : isDone ? 'done' : isIdle ? 'idle' : ''}`}>
+              <div className="node-card-inner">
+                <span className="node-icon">{step.icon}</span>
+                <div className="node-info">
+                  <div className="node-label">{step.label}</div>
+                  <div className="node-desc">{step.desc}</div>
+                </div>
+                <span className={`node-status ${isProcessing ? 'processing' : isDone ? 'done' : 'idle'}`}>
+                  {isProcessing ? '⟳' : isDone ? '✓' : '·'}
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── DOCUMENTOS RECUPERADOS ───────────────────────────────────────────────────
+function RetrievedChunks({ chunks, hasProcessed }) {
+  const catLabels = { promo:'Promo', destino:'Dest.', blog:'Blog', renta:'Renta' };
+  return (
+    <div className="retrieved-section">
+      <div className="retrieved-title">
+        Documentos recuperados
+        {chunks.length > 0 && (
+          <span className="retrieved-count">{chunks.length}</span>
+        )}
+      </div>
+      {!hasProcessed && (
+        <p className="chunk-empty">Esperando consulta...</p>
+      )}
+      {hasProcessed && chunks.length === 0 && (
+        <p className="chunk-empty">Sin resultados (baja similitud)</p>
+      )}
+      {chunks.map((c, i) => (
+        <div key={c.id} className="chunk-item" style={{ animationDelay: `${i * 0.12}s` }}>
+          <span className="chunk-score">{c.similarity}</span>
+          <span className="chunk-title">{c.icon} {c.title}</span>
+          <span className={`chunk-cat ${c.cat}`}>{catLabels[c.cat]}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── APP PRINCIPAL ────────────────────────────────────────────────────────────
+function App() {
+  const [messages, setMessages] = useState([
+    {
+      id: 0, type: 'bot',
+      text: 'Hola, soy el asistente virtual impulsado por n8n + embeddings vectoriales. Puedo ayudarte con rentas de autos, promociones activas, destinos turísticos y guías de viaje. ¿En qué te puedo ayudar hoy?',
+      chunks: [],
+    },
+  ]);
+
+  const [input,          setInput]          = useState('');
+  const [isTyping,       setIsTyping]       = useState(false);
+  const [activeStep,     setActiveStep]     = useState('webhook');
+  const [retrievedChunks, setRetrievedChunks] = useState([]);
+  const [processedCount, setProcessedCount] = useState(0);
+
+  const messagesEndRef = useRef(null);
+  const inputRef       = useRef(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isTyping]);
+
+  const runWorkflow = useCallback(async (query) => {
+    const steps  = ['webhook','embed','search','context','llm','respond'];
+    const delays = [180, 420, 520, 280, 720, 100];
+
+    let chunks = [];
+
+    for (let i = 0; i < steps.length; i++) {
+      setActiveStep(steps[i]);
+      await new Promise(r => setTimeout(r, delays[i]));
+
+      if (steps[i] === 'search') {
+        chunks = vectorSearch(query);
+        setRetrievedChunks(chunks);
+      }
+    }
+
+    setIsTyping(false);
+    const response = buildResponse(chunks);
+    setMessages(prev => [...prev, { id: Date.now(), type: 'bot', ...response }]);
+    setProcessedCount(p => p + 1);
+  }, []);
+
+  const sendMessage = useCallback(async (text) => {
+    const trimmed = text.trim();
+    if (!trimmed || isTyping) return;
+
+    setInput('');
+    setIsTyping(true);
+    setRetrievedChunks([]);
+    setMessages(prev => [...prev, { id: Date.now(), type: 'user', text: trimmed }]);
+
+    await runWorkflow(trimmed);
+  }, [isTyping, runWorkflow]);
+
+  const handleKey = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(input);
+    }
+  };
+
+  return (
+    <div>
+      {/* HEADER */}
+      <header className="app-header">
+        <div className="header-brand">
+          <div className="brand-logo">🚗</div>
+          <div>
+            <div className="brand-name">Chatbot IA — Asistente Virtual</div>
+            <div className="brand-tagline">Chatbot con n8n · RAG · Embeddings vectoriales · pgvector</div>
+          </div>
+        </div>
+        <div className="header-right">
+          {['n8n','OpenAI','pgvector','RAG'].map(t => (
+            <span key={t} className="tech-tag">{t}</span>
+          ))}
+          <span className="demo-badge">DEMO</span>
+        </div>
+      </header>
+
+      {/* LAYOUT */}
+      <div className="app-layout">
+
+        {/* ── CHAT PANEL ── */}
+        <div className="chat-panel">
+          <div className="chat-messages">
+            {messages.map(msg =>
+              msg.type === 'bot'
+                ? <BotMessage  key={msg.id} msg={msg} />
+                : <UserMessage key={msg.id} text={msg.text} />
+            )}
+            {isTyping && <TypingIndicator />}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Quick replies */}
+          <div className="quick-replies">
+            {QUICK_REPLIES.map(qr => (
+              <button
+                key={qr.label}
+                className="quick-btn"
+                onClick={() => sendMessage(qr.query)}
+                disabled={isTyping}
+              >
+                {qr.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Input */}
+          <div className="chat-input-bar">
+            <textarea
+              ref={inputRef}
+              className="chat-input"
+              placeholder="Escribe tu consulta... (Ej: ¿Tienen SUVs disponibles en Cancún?)"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={handleKey}
+              rows={1}
+              disabled={isTyping}
+            />
+            <button
+              className="send-btn"
+              onClick={() => sendMessage(input)}
+              disabled={!input.trim() || isTyping}
+              title="Enviar (Enter)"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* ── WORKFLOW PANEL ── */}
+        <div className="workflow-panel">
+          <div className="workflow-header">
+            <div className="workflow-label">
+              <span className="workflow-title">Flujo n8n — Procesamiento RAG</span>
+              <span className="n8n-badge">n8n</span>
+            </div>
+            <div className="workflow-subtitle">
+              {processedCount === 0
+                ? 'Esperando primera consulta...'
+                : `${processedCount} consulta${processedCount !== 1 ? 's' : ''} procesada${processedCount !== 1 ? 's' : ''} · simulación en tiempo real`}
+            </div>
+          </div>
+
+          <div className="workflow-body">
+            <N8nFlow
+              activeStep={activeStep}
+              isTyping={isTyping}
+              hasProcessed={processedCount > 0}
+            />
+          </div>
+
+          <RetrievedChunks
+            chunks={retrievedChunks}
+            hasProcessed={processedCount > 0}
+          />
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
