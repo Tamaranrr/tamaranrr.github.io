@@ -55,7 +55,7 @@ document.getElementById('contact-form')?.addEventListener('submit', (e) => {
   const message = document.getElementById('message').value;
   const subject = encodeURIComponent(`Contacto desde portafolio — ${name}`);
   const body    = encodeURIComponent(`Nombre: ${name}\nCorreo: ${email}\n\n${message}`);
-  window.location.href = `mailto:guaunokoujiayanodog@gmail.com?subject=${subject}&body=${body}`;
+  window.location.href = `mailto:tamaranrr@gmail.com?subject=${subject}&body=${body}`;
 });
 
 // Animate cards on scroll
