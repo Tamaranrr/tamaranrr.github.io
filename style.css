@@ -329,7 +329,7 @@ nav {
 
 .avatar-role {
   font-size: 0.85rem;
-  color: #818cf8;
+  color: #e0d7ff;
   font-weight: 600;
   margin-bottom: 1.5rem;
 }
@@ -350,12 +350,12 @@ nav {
 .avatar-stat-value {
   font-size: 1.4rem;
   font-weight: 800;
-  color: #818cf8;
+  color: #ffffff;
 }
 
 .avatar-stat-label {
   font-size: 0.72rem;
-  color: rgba(255,255,255,0.35);
+  color: rgba(255,255,255,0.6);
   font-weight: 500;
 }
 
