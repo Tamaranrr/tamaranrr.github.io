@@ -58,14 +58,19 @@ document.getElementById('contact-form')?.addEventListener('submit', (e) => {
   window.location.href = `mailto:tamaranrr@gmail.com?subject=${subject}&body=${body}`;
 });
 
-// Animate cards on scroll
+// Animate cards on scroll with stagger
 const cards = document.querySelectorAll('.project-card, .skill-category, .highlight-item');
 const cardObserver = new IntersectionObserver(
   (entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
-        entry.target.style.opacity = '1';
-        entry.target.style.transform = 'translateY(0)';
+        const siblings = Array.from(entry.target.parentElement?.children ?? []);
+        const idx = siblings.indexOf(entry.target);
+        const delay = Math.min(idx * 90, 450);
+        setTimeout(() => {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }, delay);
         cardObserver.unobserve(entry.target);
       }
     });
@@ -75,7 +80,7 @@ const cardObserver = new IntersectionObserver(
 
 cards.forEach((card) => {
   card.style.opacity = '0';
-  card.style.transform = 'translateY(20px)';
-  card.style.transition = 'opacity 0.45s ease, transform 0.45s ease';
+  card.style.transform = 'translateY(24px)';
+  card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
   cardObserver.observe(card);
 });
