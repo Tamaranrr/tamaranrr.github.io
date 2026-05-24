@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -22,15 +22,18 @@
 
   <!-- ─── HERO ─────────────────────────────────────────────── -->
   <section id="hero">
+    <div class="hero-particles" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
     <div class="hero-content">
       <div class="hero-text">
         <div class="hero-badge">Disponible para proyectos</div>
         <h1>Hola, soy<br /><span>Nicoll Tamara</span></h1>
-        <p class="hero-subtitle">Software Developer · IA & Computer Vision · Bogotá</p>
+        <p class="hero-subtitle"><strong>Desarrolladora Profesional</strong> · IA & Computer Vision · Bogotá</p>
         <p class="hero-description">
-          Desarrollo software con IA integrada — dashboards editoriales con React, chatbots con
-          <strong>n8n + búsqueda vectorial</strong>, y visión por computadora en Python.
-          Construyo el puente entre interfaz de usuario y modelos inteligentes.
+          Construyo <strong>soluciones profesionales</strong> con IA integrada — desde sistemas de
+          <strong>automatización de RRHH con Talent Intelligence</strong> hasta chatbots con
+          <strong>n8n + búsqueda vectorial</strong> y dashboards editoriales en React.
         </p>
         <div class="hero-buttons">
           <a href="#proyectos" class="btn-primary">
@@ -77,13 +80,15 @@
           <p>
             Soy Nicoll Tamara, desarrolladora de software especializada en construir productos
             que combinan <strong>interfaces modernas en React</strong> con <strong>inteligencia
-            artificial integrada</strong>. He construido CMS editoriales, builders de campañas
-            email y chatbots con n8n que usan búsqueda vectorial (RAG) para respuestas
-            contextualmente relevantes — proyectos reales con demos funcionales.
+            artificial integrada</strong>. Lideré el desarrollo de
+            <strong>Talent Intelligence</strong>, un sistema profesional de automatización de
+            RRHH con matching semántico por IA; y construí CMS editoriales, email builders y
+            chatbots con n8n que usan búsqueda vectorial (RAG) para respuestas contextualmente
+            relevantes — proyectos reales para empresas, con demos funcionales.
           </p>
           <p>
-            Como opción de grado en Python desarrollé un <strong>sistema de reconocimiento
-            facial de emociones en tiempo real</strong>: OpenCV captura video a 30fps, MediaPipe
+            Mi proyecto de grado en Python fue un <strong>sistema de reconocimiento
+            facial de emociones en tiempo real</strong>: OpenCV captura video a 30 fps, MediaPipe
             extrae 68 landmarks faciales por fotograma, DeepFace clasifica con FER2013 y el
             modelo adapta la conversación al estado afectivo del usuario. Eso me dio base
             sólida en Computer Vision y modelos de lenguaje.
@@ -98,7 +103,7 @@
             <div class="highlight-icon">🤖</div>
             <div>
               <h4>IA & Automatización</h4>
-              <p>n8n workflows, GPT-4o, RAG con embeddings vectoriales y búsqueda semántica.</p>
+              <p>n8n workflows, LLMs, RAG con embeddings vectoriales y búsqueda semántica.</p>
             </div>
           </div>
           <div class="highlight-item">
@@ -118,7 +123,7 @@
           <div class="highlight-item">
             <div class="highlight-icon">🔗</div>
             <div>
-              <h4>Flujos end-to-end</h4>
+              <h4>Flujos de extremo a extremo</h4>
               <p>Del prompt al resultado: pipelines que conectan UI, modelo y base de datos.</p>
             </div>
           </div>
@@ -168,8 +173,8 @@
             IA & Machine Learning
           </div>
           <div class="skill-tags">
-            <span class="skill-tag">GPT-4o</span>
-            <span class="skill-tag">OpenAI API</span>
+            <span class="skill-tag">Modelos de Lenguaje (LLM)</span>
+            <span class="skill-tag">IA Generativa (APIs)</span>
             <span class="skill-tag">RAG / Embeddings</span>
             <span class="skill-tag">DeepFace</span>
             <span class="skill-tag">MediaPipe</span>
@@ -201,284 +206,6 @@
         <p>Demos interactivos con datos de muestra para que puedas explorar cada proyecto.</p>
       </div>
       <div class="projects-grid">
-
-        <!-- Proyecto 1: Dashboard de Blogs -->
-        <article class="project-card">
-          <div class="mockup-browser">
-            <div class="mockup-bar">
-              <span class="mockup-dot red"></span>
-              <span class="mockup-dot yellow"></span>
-              <span class="mockup-dot green"></span>
-              <span class="mockup-url">dashboard-blogs · demo</span>
-            </div>
-            <div class="mockup-content">
-              <!-- Mockup SVG del dashboard de blogs -->
-              <svg viewBox="0 0 480 200" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
-                <!-- Fondo -->
-                <rect width="480" height="200" fill="#e6e6e6"/>
-                <!-- Nav -->
-                <rect width="480" height="36" fill="#fff"/>
-                <text x="12" y="23" font-size="11" font-weight="800" fill="#0f172a">Dashboard </text>
-                <text x="78" y="23" font-size="11" font-weight="800" fill="#3b82f6">Blogs</text>
-                <rect x="330" y="9" width="90" height="18" rx="6" fill="#fffbeb"/>
-                <text x="345" y="22" font-size="7" fill="#92400e" font-weight="600">Modo demo</text>
-                <!-- Stats -->
-                <rect x="8" y="44" width="100" height="38" rx="6" fill="#fff"/>
-                <text x="16" y="58" font-size="7" fill="#64748b">Artículos Totales</text>
-                <text x="16" y="73" font-size="14" font-weight="800" fill="#0f172a">8</text>
-                <rect x="116" y="44" width="100" height="38" rx="6" fill="#fff"/>
-                <text x="124" y="58" font-size="7" fill="#64748b">Publicados</text>
-                <text x="124" y="73" font-size="14" font-weight="800" fill="#0f172a">2</text>
-                <rect x="224" y="44" width="100" height="38" rx="6" fill="#fff"/>
-                <text x="232" y="58" font-size="7" fill="#64748b">Sin Asignar</text>
-                <text x="232" y="73" font-size="14" font-weight="800" fill="#0f172a">2</text>
-                <rect x="332" y="44" width="140" height="38" rx="6" fill="#fff"/>
-                <text x="340" y="58" font-size="7" fill="#64748b">En Progreso</text>
-                <text x="340" y="73" font-size="14" font-weight="800" fill="#0f172a">2</text>
-                <!-- Table section -->
-                <rect x="8" y="90" width="464" height="102" rx="6" fill="#fff"/>
-                <!-- Table header -->
-                <rect x="8" y="90" width="464" height="20" rx="6" fill="#f8fafc"/>
-                <text x="18" y="103" font-size="7" fill="#64748b" font-weight="600">Título del Contenido</text>
-                <text x="200" y="103" font-size="7" fill="#64748b" font-weight="600">Estado</text>
-                <text x="280" y="103" font-size="7" fill="#64748b" font-weight="600">Prioridad</text>
-                <text x="370" y="103" font-size="7" fill="#64748b" font-weight="600">Acciones</text>
-                <!-- Row 1 -->
-                <line x1="8" y1="111" x2="472" y2="111" stroke="#f1f5f9" stroke-width="1"/>
-                <text x="18" y="122" font-size="7.5" fill="#1e293b" font-weight="600">Guía completa de arriendo de carros…</text>
-                <rect x="196" y="115" width="60" height="12" rx="4" fill="#dcfce7"/>
-                <text x="202" y="124" font-size="6.5" fill="#15803d" font-weight="600">● Publicado</text>
-                <rect x="274" y="115" width="36" height="12" rx="4" fill="#fee2e2"/>
-                <text x="280" y="124" font-size="6.5" fill="#dc2626" font-weight="600">● Alta</text>
-                <!-- Row 2 -->
-                <line x1="8" y1="130" x2="472" y2="130" stroke="#f1f5f9" stroke-width="1"/>
-                <text x="18" y="141" font-size="7.5" fill="#1e293b" font-weight="600">5 destinos imperdibles para Europa</text>
-                <rect x="196" y="134" width="64" height="12" rx="4" fill="#f0f4ff"/>
-                <text x="202" y="143" font-size="6.5" fill="#4f46e5" font-weight="600">● Generado</text>
-                <rect x="274" y="134" width="36" height="12" rx="4" fill="#fee2e2"/>
-                <text x="280" y="143" font-size="6.5" fill="#dc2626" font-weight="600">● Alta</text>
-                <!-- Row 3 -->
-                <line x1="8" y1="149" x2="472" y2="149" stroke="#f1f5f9" stroke-width="1"/>
-                <text x="18" y="160" font-size="7.5" fill="#1e293b" font-weight="600">¿Qué debes saber antes del contrato?</text>
-                <rect x="196" y="153" width="58" height="12" rx="4" fill="#fff7ed"/>
-                <text x="202" y="162" font-size="6.5" fill="#c2410c" font-weight="600">● En Revisión</text>
-                <rect x="274" y="153" width="40" height="12" rx="4" fill="#fef9c3"/>
-                <text x="279" y="162" font-size="6.5" fill="#854d0e" font-weight="600">● Media</text>
-                <!-- Row 4 -->
-                <line x1="8" y1="168" x2="472" y2="168" stroke="#f1f5f9" stroke-width="1"/>
-                <text x="18" y="179" font-size="7.5" fill="#1e293b" font-weight="600">Tendencias de viaje en Latinoamérica</text>
-                <rect x="196" y="172" width="50" height="12" rx="4" fill="#f1f5f9"/>
-                <text x="202" y="181" font-size="6.5" fill="#475569" font-weight="600">● Borrador</text>
-                <rect x="274" y="172" width="34" height="12" rx="4" fill="#dcfce7"/>
-                <text x="279" y="181" font-size="6.5" fill="#166534" font-weight="600">● Baja</text>
-              </svg>
-            </div>
-          </div>
-          <div class="project-info">
-            <div class="project-tags">
-              <span class="project-tag">React</span>
-              <span class="project-tag">JavaScript</span>
-              <span class="project-tag">CSS</span>
-              <span class="project-tag">Unicons</span>
-            </div>
-            <h3>Sistema de Gestión de Blogs</h3>
-            <p>CMS editorial con 2 vistas: <strong>dashboard</strong> de artículos con filtros, estados y asignación de redactores; y <strong>editor IA</strong> con árbol de estructura, generación de contenido por sección, modo oscuro y FAQs automáticas.</p>
-            <div class="project-links">
-              <a href="demos/blog/index.html" class="btn-demo" target="_blank">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                Ver Demo
-              </a>
-            </div>
-          </div>
-        </article>
-
-        <!-- Proyecto 2: Redactoria — Dashboard de Landing Pages -->
-        <article class="project-card">
-          <div class="mockup-browser">
-            <div class="mockup-bar">
-              <span class="mockup-dot red"></span>
-              <span class="mockup-dot yellow"></span>
-              <span class="mockup-dot green"></span>
-              <span class="mockup-url">dashboard-redactoria · demo</span>
-            </div>
-            <div class="mockup-content">
-              <!-- Mockup SVG fiel al DemoDashboard.jsx -->
-              <svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
-                <!-- Fondo general -->
-                <rect width="480" height="260" fill="#f8fafc"/>
-
-                <!-- ── HEADER ── -->
-                <rect width="480" height="38" fill="white"/>
-                <rect width="480" height="1" y="38" fill="#e2e8f0"/>
-                <!-- Título -->
-                <text x="14" y="15" font-size="11" font-weight="800" fill="#3b82f6">Dashboard</text>
-                <text x="90" y="15" font-size="11" font-weight="800" fill="#1e293b">Redactoria</text>
-                <text x="14" y="28" font-size="6.5" fill="#64748b">Gestiona y supervisa todos los proyectos de Landing Pages</text>
-                <!-- Badge DEMO -->
-                <rect x="296" y="9" width="72" height="16" rx="5" fill="#fffbeb" stroke="#fde68a" stroke-width="0.5"/>
-                <text x="332" y="20" font-size="6" font-weight="700" fill="#92400e" text-anchor="middle">DEMO — muestra</text>
-                <!-- Avatar -->
-                <circle cx="455" cy="19" r="10" fill="#3b82f6"/>
-                <text x="455" y="23" font-size="7" font-weight="700" fill="white" text-anchor="middle">AG</text>
-
-                <!-- ── STATS CARDS ── -->
-                <!-- Card Proyectos Totales -->
-                <rect x="8" y="46" width="106" height="36" rx="5" fill="white" stroke="#e2e8f0" stroke-width="0.5"/>
-                <rect x="15" y="52" width="18" height="18" rx="4" fill="#dbeafe"/>
-                <text x="24" y="64" font-size="9" fill="#3b82f6" text-anchor="middle">✎</text>
-                <text x="40" y="61" font-size="12" font-weight="800" fill="#1e293b">8</text>
-                <text x="40" y="74" font-size="6.5" fill="#64748b">Proyectos Totales</text>
-
-                <!-- Card Publicados -->
-                <rect x="122" y="46" width="106" height="36" rx="5" fill="white" stroke="#e2e8f0" stroke-width="0.5"/>
-                <rect x="129" y="52" width="18" height="18" rx="4" fill="#dbeafe"/>
-                <text x="138" y="64" font-size="9" fill="#3b82f6" text-anchor="middle">✓</text>
-                <text x="154" y="61" font-size="12" font-weight="800" fill="#1e293b">1</text>
-                <text x="154" y="74" font-size="6.5" fill="#64748b">Publicados</text>
-
-                <!-- Card En Proceso -->
-                <rect x="236" y="46" width="106" height="36" rx="5" fill="white" stroke="#e2e8f0" stroke-width="0.5"/>
-                <rect x="243" y="52" width="18" height="18" rx="4" fill="#fef3c7"/>
-                <text x="252" y="64" font-size="9" fill="#f59e0b" text-anchor="middle">◷</text>
-                <text x="268" y="61" font-size="12" font-weight="800" fill="#1e293b">7</text>
-                <text x="268" y="74" font-size="6.5" fill="#64748b">En Proceso</text>
-
-                <!-- Card Sin Asignar -->
-                <rect x="350" y="46" width="122" height="36" rx="5" fill="white" stroke="#e2e8f0" stroke-width="0.5"/>
-                <rect x="357" y="52" width="18" height="18" rx="4" fill="#fee2e2"/>
-                <text x="366" y="64" font-size="9" fill="#ef4444" text-anchor="middle">!</text>
-                <text x="382" y="61" font-size="12" font-weight="800" fill="#1e293b">2</text>
-                <text x="382" y="74" font-size="6.5" fill="#64748b">Sin Asignar</text>
-
-                <!-- ── BARRA DE FILTROS ── -->
-                <rect x="8" y="90" width="464" height="26" rx="5" fill="white" stroke="#e2e8f0" stroke-width="0.5"/>
-                <!-- Campo búsqueda -->
-                <rect x="14" y="95" width="110" height="15" rx="3" fill="#f8fafc" stroke="#d1d5db" stroke-width="0.5"/>
-                <text x="20" y="105" font-size="6" fill="#94a3b8">🔍  Buscar proyectos...</text>
-                <!-- Select estados -->
-                <rect x="130" y="95" width="72" height="15" rx="3" fill="#f8fafc" stroke="#d1d5db" stroke-width="0.5"/>
-                <text x="136" y="105" font-size="6" fill="#94a3b8">Todos los estados</text>
-                <!-- Select prioridad -->
-                <rect x="208" y="95" width="65" height="15" rx="3" fill="#f8fafc" stroke="#d1d5db" stroke-width="0.5"/>
-                <text x="214" y="105" font-size="6" fill="#94a3b8">Todas las prior.</text>
-                <!-- Select asignado -->
-                <rect x="279" y="95" width="65" height="15" rx="3" fill="#f8fafc" stroke="#d1d5db" stroke-width="0.5"/>
-                <text x="285" y="105" font-size="6" fill="#94a3b8">Todos asignados</text>
-                <!-- Botón Nuevo Proyecto -->
-                <rect x="402" y="94" width="64" height="17" rx="4" fill="#3b82f6"/>
-                <text x="434" y="106" font-size="6.5" font-weight="700" fill="white" text-anchor="middle">+ Nuevo</text>
-
-                <!-- ── TABLA ── -->
-                <rect x="8" y="124" width="464" height="130" rx="5" fill="white" stroke="#e2e8f0" stroke-width="0.5"/>
-                <!-- Cabecera tabla -->
-                <rect x="8" y="124" width="464" height="16" rx="5" fill="#f8fafc"/>
-                <text x="16" y="134"  font-size="5.5" fill="#374151" font-weight="700">NOMBRE</text>
-                <text x="148" y="134" font-size="5.5" fill="#374151" font-weight="700">TEMPLATE</text>
-                <text x="248" y="134" font-size="5.5" fill="#374151" font-weight="700">ASIGNADO A</text>
-                <text x="315" y="134" font-size="5.5" fill="#374151" font-weight="700">ESTADO</text>
-                <text x="370" y="134" font-size="5.5" fill="#374151" font-weight="700">PRIOR.</text>
-                <text x="412" y="134" font-size="5.5" fill="#374151" font-weight="700">ACCIONES</text>
-
-                <!-- Fila 1 — LP Las Vegas -->
-                <line x1="8" y1="141" x2="472" y2="141" stroke="#f1f5f9" stroke-width="0.5"/>
-                <text x="16" y="151"  font-size="6.5" fill="#1e293b" font-weight="600">LP Las Vegas - Alquiler de Autos</text>
-                <text x="148" y="151" font-size="6" fill="#64748b">LP Autos Las Vegas</text>
-                <!-- Avatar Carlos -->
-                <circle cx="252" cy="148" r="5" fill="#3b82f6"/>
-                <text x="252" y="151" font-size="4" font-weight="700" fill="white" text-anchor="middle">CL</text>
-                <text x="260" y="151" font-size="6" fill="#1e293b">Carlos López</text>
-                <rect x="310" y="144" width="50" height="10" rx="3" fill="#dbeafe"/>
-                <text x="335" y="151" font-size="5.5" fill="#3b82f6" text-anchor="middle">● En Redacción</text>
-                <rect x="365" y="144" width="28" height="10" rx="3" fill="#fee2e2"/>
-                <text x="379" y="151" font-size="5.5" fill="#ef4444" text-anchor="middle">Alta</text>
-                <!-- Acciones -->
-                <rect x="410" y="144" width="10" height="10" rx="2" fill="#3b82f6"/>
-                <rect x="423" y="144" width="10" height="10" rx="2" fill="#10b981"/>
-                <rect x="436" y="144" width="10" height="10" rx="2" fill="#f3f4f6"/>
-                <rect x="449" y="144" width="10" height="10" rx="2" fill="#ef4444"/>
-
-                <!-- Fila 2 — LP Cancún -->
-                <line x1="8" y1="157" x2="472" y2="157" stroke="#f1f5f9" stroke-width="0.5"/>
-                <text x="16" y="167"  font-size="6.5" fill="#1e293b" font-weight="600">LP Cancún - Autos Económicos</text>
-                <text x="148" y="167" font-size="6" fill="#64748b">LP Autos Cancún</text>
-                <circle cx="252" cy="164" r="5" fill="#3b82f6"/>
-                <text x="252" y="167" font-size="4" font-weight="700" fill="white" text-anchor="middle">MT</text>
-                <text x="260" y="167" font-size="6" fill="#1e293b">María Torres</text>
-                <rect x="310" y="160" width="50" height="10" rx="3" fill="#fef3c7"/>
-                <text x="335" y="167" font-size="5.5" fill="#f59e0b" text-anchor="middle">● Pend. Revisión</text>
-                <rect x="365" y="160" width="28" height="10" rx="3" fill="#fef3c7"/>
-                <text x="379" y="167" font-size="5.5" fill="#d97706" text-anchor="middle">Media</text>
-                <rect x="410" y="160" width="10" height="10" rx="2" fill="#3b82f6"/>
-                <rect x="423" y="160" width="10" height="10" rx="2" fill="#10b981"/>
-                <rect x="436" y="160" width="10" height="10" rx="2" fill="#f3f4f6"/>
-                <rect x="449" y="160" width="10" height="10" rx="2" fill="#ef4444"/>
-
-                <!-- Fila 3 — LP Bogotá -->
-                <line x1="8" y1="173" x2="472" y2="173" stroke="#f1f5f9" stroke-width="0.5"/>
-                <text x="16" y="183"  font-size="6.5" fill="#1e293b" font-weight="600">LP Bogotá - Agencias de Carros</text>
-                <text x="148" y="183" font-size="6" fill="#64748b">LP Agencias Bogotá</text>
-                <text x="248" y="183" font-size="6" fill="#94a3b8">Sin asignar</text>
-                <rect x="310" y="176" width="42" height="10" rx="3" fill="#ede9fe"/>
-                <text x="331" y="183" font-size="5.5" fill="#8b5cf6" text-anchor="middle">● Pend. KWS</text>
-                <rect x="365" y="176" width="28" height="10" rx="3" fill="#fee2e2"/>
-                <text x="379" y="183" font-size="5.5" fill="#ef4444" text-anchor="middle">Alta</text>
-                <rect x="410" y="176" width="10" height="10" rx="2" fill="#3b82f6"/>
-                <rect x="423" y="176" width="10" height="10" rx="2" fill="#10b981"/>
-                <rect x="436" y="176" width="10" height="10" rx="2" fill="#f3f4f6"/>
-                <rect x="449" y="176" width="10" height="10" rx="2" fill="#ef4444"/>
-
-                <!-- Fila 4 — LP Miami -->
-                <line x1="8" y1="189" x2="472" y2="189" stroke="#f1f5f9" stroke-width="0.5"/>
-                <text x="16" y="199"  font-size="6.5" fill="#1e293b" font-weight="600">LP Miami - Rental Cars Agencies</text>
-                <text x="148" y="199" font-size="6" fill="#64748b">LP Agencias Miami</text>
-                <circle cx="252" cy="196" r="5" fill="#3b82f6"/>
-                <text x="252" y="199" font-size="4" font-weight="700" fill="white" text-anchor="middle">PR</text>
-                <text x="260" y="199" font-size="6" fill="#1e293b">Pedro Ramírez</text>
-                <rect x="310" y="192" width="40" height="10" rx="3" fill="#d1fae5"/>
-                <text x="330" y="199" font-size="5.5" fill="#059669" text-anchor="middle">● Aprobado</text>
-                <rect x="365" y="192" width="28" height="10" rx="3" fill="#d1fae5"/>
-                <text x="379" y="199" font-size="5.5" fill="#10b981" text-anchor="middle">Baja</text>
-                <rect x="410" y="192" width="10" height="10" rx="2" fill="#3b82f6"/>
-                <rect x="423" y="192" width="10" height="10" rx="2" fill="#10b981"/>
-                <rect x="436" y="192" width="10" height="10" rx="2" fill="#f3f4f6"/>
-                <rect x="449" y="192" width="10" height="10" rx="2" fill="#ef4444"/>
-
-                <!-- Fila 5 — LP México DF -->
-                <line x1="8" y1="205" x2="472" y2="205" stroke="#f1f5f9" stroke-width="0.5"/>
-                <text x="16" y="215"  font-size="6.5" fill="#1e293b" font-weight="600">LP México DF - Turismo Viajeros</text>
-                <text x="148" y="215" font-size="6" fill="#64748b">LP Ciudad México DF</text>
-                <text x="248" y="215" font-size="6" fill="#94a3b8">Sin asignar</text>
-                <rect x="310" y="208" width="36" height="10" rx="3" fill="#f1f5f9"/>
-                <text x="328" y="215" font-size="5.5" fill="#6b7280" text-anchor="middle">● Borrador</text>
-                <rect x="365" y="208" width="28" height="10" rx="3" fill="#d1fae5"/>
-                <text x="379" y="215" font-size="5.5" fill="#10b981" text-anchor="middle">Baja</text>
-                <rect x="410" y="208" width="10" height="10" rx="2" fill="#3b82f6"/>
-                <rect x="423" y="208" width="10" height="10" rx="2" fill="#10b981"/>
-                <rect x="436" y="208" width="10" height="10" rx="2" fill="#f3f4f6"/>
-                <rect x="449" y="208" width="10" height="10" rx="2" fill="#ef4444"/>
-
-                <!-- Nota de modo demo -->
-                <text x="240" y="248" font-size="5.5" fill="#94a3b8" text-anchor="middle">Modo demo — los datos no persisten al recargar la página</text>
-              </svg>
-            </div>
-          </div>
-          <div class="project-info">
-            <div class="project-tags">
-              <span class="project-tag">React</span>
-              <span class="project-tag">JavaScript</span>
-              <span class="project-tag">Lucide Icons</span>
-              <span class="project-tag">useMemo</span>
-            </div>
-            <h3>Redactoria — Dashboard de LPs</h3>
-            <p>Dashboard administrativo para gestión de Landing Pages. Incluye <strong>stats en tiempo real</strong>, filtros por estado/prioridad/asignado, tabla interactiva con acciones, y modales para crear, editar, asignar y eliminar proyectos. Datos de muestra totalmente funcionales.</p>
-            <div class="project-links">
-              <a href="demos/redactoria/index.html" class="btn-demo" target="_blank">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                Ver Demo
-              </a>
-            </div>
-          </div>
-        </article>
 
         <!-- Proyecto 3: Talent Intelligence -->
         <article class="project-card">
@@ -803,7 +530,6 @@
           </div>
         </article>
 
-
         <!-- Proyecto 5: Chatbot IA — n8n + Embeddings -->
         <article class="project-card">
           <div class="mockup-browser">
@@ -1017,7 +743,7 @@
                 </defs>
                 <text x="10" y="18" font-size="6" text-anchor="middle" fill="white">🎭</text>
                 <text x="30" y="13" font-size="7" font-weight="700" fill="#f1f5f9">Reconocimiento Facial de Emociones</text>
-                <text x="30" y="23" font-size="5" fill="#475569">Opción de grado · Python · Computer Vision</text>
+                <text x="30" y="23" font-size="5" fill="#475569">Proyecto de grado · Python · Computer Vision</text>
                 <rect x="370" y="7" width="30" height="14" rx="3" fill="#1e2d1a" stroke="#22c55e40" stroke-width="0.5"/>
                 <text x="385" y="17" font-size="5" fill="#4ade80" font-weight="600" text-anchor="middle">Python</text>
                 <rect x="404" y="7" width="34" height="14" rx="3" fill="#1d1a2d" stroke="#8b5cf640" stroke-width="0.5"/>
@@ -1175,7 +901,7 @@
               <span class="project-tag">GPT-4o</span>
             </div>
             <h3>Reconocimiento Facial de Emociones</h3>
-            <p>Opción de grado en Python. Detecta emociones en tiempo real por cámara usando <strong>MediaPipe (68 landmarks) + DeepFace/FER2013</strong>, y genera una <strong>conversación empática adaptada</strong> al estado afectivo del usuario. Pensado como asistente de bienestar emocional.</p>
+            <p>Proyecto de grado en Python. Detecta emociones en tiempo real por cámara usando <strong>MediaPipe (68 landmarks) + DeepFace/FER2013</strong>, y genera una <strong>conversación empática adaptada</strong> al estado afectivo del usuario. Pensado como asistente de bienestar emocional.</p>
             <div class="project-links">
               <a href="demos/emociones/index.html" class="btn-demo" target="_blank">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -1184,6 +910,285 @@
             </div>
           </div>
         </article>
+
+        <!-- Proyecto 2: Redactoria — Dashboard de Landing Pages -->
+        <article class="project-card">
+          <div class="mockup-browser">
+            <div class="mockup-bar">
+              <span class="mockup-dot red"></span>
+              <span class="mockup-dot yellow"></span>
+              <span class="mockup-dot green"></span>
+              <span class="mockup-url">dashboard-redactoria · demo</span>
+            </div>
+            <div class="mockup-content">
+              <!-- Mockup SVG fiel al DemoDashboard.jsx -->
+              <svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
+                <!-- Fondo general -->
+                <rect width="480" height="260" fill="#f8fafc"/>
+
+                <!-- ── HEADER ── -->
+                <rect width="480" height="38" fill="white"/>
+                <rect width="480" height="1" y="38" fill="#e2e8f0"/>
+                <!-- Título -->
+                <text x="14" y="15" font-size="11" font-weight="800" fill="#3b82f6">Dashboard</text>
+                <text x="90" y="15" font-size="11" font-weight="800" fill="#1e293b">Redactoria</text>
+                <text x="14" y="28" font-size="6.5" fill="#64748b">Gestiona y supervisa todos los proyectos de Landing Pages</text>
+                <!-- Badge DEMO -->
+                <rect x="296" y="9" width="72" height="16" rx="5" fill="#fffbeb" stroke="#fde68a" stroke-width="0.5"/>
+                <text x="332" y="20" font-size="6" font-weight="700" fill="#92400e" text-anchor="middle">DEMO — muestra</text>
+                <!-- Avatar -->
+                <circle cx="455" cy="19" r="10" fill="#3b82f6"/>
+                <text x="455" y="23" font-size="7" font-weight="700" fill="white" text-anchor="middle">AG</text>
+
+                <!-- ── STATS CARDS ── -->
+                <!-- Card Proyectos Totales -->
+                <rect x="8" y="46" width="106" height="36" rx="5" fill="white" stroke="#e2e8f0" stroke-width="0.5"/>
+                <rect x="15" y="52" width="18" height="18" rx="4" fill="#dbeafe"/>
+                <text x="24" y="64" font-size="9" fill="#3b82f6" text-anchor="middle">✎</text>
+                <text x="40" y="61" font-size="12" font-weight="800" fill="#1e293b">8</text>
+                <text x="40" y="74" font-size="6.5" fill="#64748b">Proyectos Totales</text>
+
+                <!-- Card Publicados -->
+                <rect x="122" y="46" width="106" height="36" rx="5" fill="white" stroke="#e2e8f0" stroke-width="0.5"/>
+                <rect x="129" y="52" width="18" height="18" rx="4" fill="#dbeafe"/>
+                <text x="138" y="64" font-size="9" fill="#3b82f6" text-anchor="middle">✓</text>
+                <text x="154" y="61" font-size="12" font-weight="800" fill="#1e293b">1</text>
+                <text x="154" y="74" font-size="6.5" fill="#64748b">Publicados</text>
+
+                <!-- Card En Proceso -->
+                <rect x="236" y="46" width="106" height="36" rx="5" fill="white" stroke="#e2e8f0" stroke-width="0.5"/>
+                <rect x="243" y="52" width="18" height="18" rx="4" fill="#fef3c7"/>
+                <text x="252" y="64" font-size="9" fill="#f59e0b" text-anchor="middle">◷</text>
+                <text x="268" y="61" font-size="12" font-weight="800" fill="#1e293b">7</text>
+                <text x="268" y="74" font-size="6.5" fill="#64748b">En Proceso</text>
+
+                <!-- Card Sin Asignar -->
+                <rect x="350" y="46" width="122" height="36" rx="5" fill="white" stroke="#e2e8f0" stroke-width="0.5"/>
+                <rect x="357" y="52" width="18" height="18" rx="4" fill="#fee2e2"/>
+                <text x="366" y="64" font-size="9" fill="#ef4444" text-anchor="middle">!</text>
+                <text x="382" y="61" font-size="12" font-weight="800" fill="#1e293b">2</text>
+                <text x="382" y="74" font-size="6.5" fill="#64748b">Sin Asignar</text>
+
+                <!-- ── BARRA DE FILTROS ── -->
+                <rect x="8" y="90" width="464" height="26" rx="5" fill="white" stroke="#e2e8f0" stroke-width="0.5"/>
+                <!-- Campo búsqueda -->
+                <rect x="14" y="95" width="110" height="15" rx="3" fill="#f8fafc" stroke="#d1d5db" stroke-width="0.5"/>
+                <text x="20" y="105" font-size="6" fill="#94a3b8">🔍  Buscar proyectos...</text>
+                <!-- Select estados -->
+                <rect x="130" y="95" width="72" height="15" rx="3" fill="#f8fafc" stroke="#d1d5db" stroke-width="0.5"/>
+                <text x="136" y="105" font-size="6" fill="#94a3b8">Todos los estados</text>
+                <!-- Select prioridad -->
+                <rect x="208" y="95" width="65" height="15" rx="3" fill="#f8fafc" stroke="#d1d5db" stroke-width="0.5"/>
+                <text x="214" y="105" font-size="6" fill="#94a3b8">Todas las prior.</text>
+                <!-- Select asignado -->
+                <rect x="279" y="95" width="65" height="15" rx="3" fill="#f8fafc" stroke="#d1d5db" stroke-width="0.5"/>
+                <text x="285" y="105" font-size="6" fill="#94a3b8">Todos asignados</text>
+                <!-- Botón Nuevo Proyecto -->
+                <rect x="402" y="94" width="64" height="17" rx="4" fill="#3b82f6"/>
+                <text x="434" y="106" font-size="6.5" font-weight="700" fill="white" text-anchor="middle">+ Nuevo</text>
+
+                <!-- ── TABLA ── -->
+                <rect x="8" y="124" width="464" height="130" rx="5" fill="white" stroke="#e2e8f0" stroke-width="0.5"/>
+                <!-- Cabecera tabla -->
+                <rect x="8" y="124" width="464" height="16" rx="5" fill="#f8fafc"/>
+                <text x="16" y="134"  font-size="5.5" fill="#374151" font-weight="700">NOMBRE</text>
+                <text x="148" y="134" font-size="5.5" fill="#374151" font-weight="700">TEMPLATE</text>
+                <text x="248" y="134" font-size="5.5" fill="#374151" font-weight="700">ASIGNADO A</text>
+                <text x="315" y="134" font-size="5.5" fill="#374151" font-weight="700">ESTADO</text>
+                <text x="370" y="134" font-size="5.5" fill="#374151" font-weight="700">PRIOR.</text>
+                <text x="412" y="134" font-size="5.5" fill="#374151" font-weight="700">ACCIONES</text>
+
+                <!-- Fila 1 — LP Las Vegas -->
+                <line x1="8" y1="141" x2="472" y2="141" stroke="#f1f5f9" stroke-width="0.5"/>
+                <text x="16" y="151"  font-size="6.5" fill="#1e293b" font-weight="600">LP Las Vegas - Alquiler de Autos</text>
+                <text x="148" y="151" font-size="6" fill="#64748b">LP Autos Las Vegas</text>
+                <!-- Avatar Carlos -->
+                <circle cx="252" cy="148" r="5" fill="#3b82f6"/>
+                <text x="252" y="151" font-size="4" font-weight="700" fill="white" text-anchor="middle">CL</text>
+                <text x="260" y="151" font-size="6" fill="#1e293b">Carlos López</text>
+                <rect x="310" y="144" width="50" height="10" rx="3" fill="#dbeafe"/>
+                <text x="335" y="151" font-size="5.5" fill="#3b82f6" text-anchor="middle">● En Redacción</text>
+                <rect x="365" y="144" width="28" height="10" rx="3" fill="#fee2e2"/>
+                <text x="379" y="151" font-size="5.5" fill="#ef4444" text-anchor="middle">Alta</text>
+                <!-- Acciones -->
+                <rect x="410" y="144" width="10" height="10" rx="2" fill="#3b82f6"/>
+                <rect x="423" y="144" width="10" height="10" rx="2" fill="#10b981"/>
+                <rect x="436" y="144" width="10" height="10" rx="2" fill="#f3f4f6"/>
+                <rect x="449" y="144" width="10" height="10" rx="2" fill="#ef4444"/>
+
+                <!-- Fila 2 — LP Cancún -->
+                <line x1="8" y1="157" x2="472" y2="157" stroke="#f1f5f9" stroke-width="0.5"/>
+                <text x="16" y="167"  font-size="6.5" fill="#1e293b" font-weight="600">LP Cancún - Autos Económicos</text>
+                <text x="148" y="167" font-size="6" fill="#64748b">LP Autos Cancún</text>
+                <circle cx="252" cy="164" r="5" fill="#3b82f6"/>
+                <text x="252" y="167" font-size="4" font-weight="700" fill="white" text-anchor="middle">MT</text>
+                <text x="260" y="167" font-size="6" fill="#1e293b">María Torres</text>
+                <rect x="310" y="160" width="50" height="10" rx="3" fill="#fef3c7"/>
+                <text x="335" y="167" font-size="5.5" fill="#f59e0b" text-anchor="middle">● Pend. Revisión</text>
+                <rect x="365" y="160" width="28" height="10" rx="3" fill="#fef3c7"/>
+                <text x="379" y="167" font-size="5.5" fill="#d97706" text-anchor="middle">Media</text>
+                <rect x="410" y="160" width="10" height="10" rx="2" fill="#3b82f6"/>
+                <rect x="423" y="160" width="10" height="10" rx="2" fill="#10b981"/>
+                <rect x="436" y="160" width="10" height="10" rx="2" fill="#f3f4f6"/>
+                <rect x="449" y="160" width="10" height="10" rx="2" fill="#ef4444"/>
+
+                <!-- Fila 3 — LP Bogotá -->
+                <line x1="8" y1="173" x2="472" y2="173" stroke="#f1f5f9" stroke-width="0.5"/>
+                <text x="16" y="183"  font-size="6.5" fill="#1e293b" font-weight="600">LP Bogotá - Agencias de Carros</text>
+                <text x="148" y="183" font-size="6" fill="#64748b">LP Agencias Bogotá</text>
+                <text x="248" y="183" font-size="6" fill="#94a3b8">Sin asignar</text>
+                <rect x="310" y="176" width="42" height="10" rx="3" fill="#ede9fe"/>
+                <text x="331" y="183" font-size="5.5" fill="#8b5cf6" text-anchor="middle">● Pend. KWS</text>
+                <rect x="365" y="176" width="28" height="10" rx="3" fill="#fee2e2"/>
+                <text x="379" y="183" font-size="5.5" fill="#ef4444" text-anchor="middle">Alta</text>
+                <rect x="410" y="176" width="10" height="10" rx="2" fill="#3b82f6"/>
+                <rect x="423" y="176" width="10" height="10" rx="2" fill="#10b981"/>
+                <rect x="436" y="176" width="10" height="10" rx="2" fill="#f3f4f6"/>
+                <rect x="449" y="176" width="10" height="10" rx="2" fill="#ef4444"/>
+
+                <!-- Fila 4 — LP Miami -->
+                <line x1="8" y1="189" x2="472" y2="189" stroke="#f1f5f9" stroke-width="0.5"/>
+                <text x="16" y="199"  font-size="6.5" fill="#1e293b" font-weight="600">LP Miami - Rental Cars Agencies</text>
+                <text x="148" y="199" font-size="6" fill="#64748b">LP Agencias Miami</text>
+                <circle cx="252" cy="196" r="5" fill="#3b82f6"/>
+                <text x="252" y="199" font-size="4" font-weight="700" fill="white" text-anchor="middle">PR</text>
+                <text x="260" y="199" font-size="6" fill="#1e293b">Pedro Ramírez</text>
+                <rect x="310" y="192" width="40" height="10" rx="3" fill="#d1fae5"/>
+                <text x="330" y="199" font-size="5.5" fill="#059669" text-anchor="middle">● Aprobado</text>
+                <rect x="365" y="192" width="28" height="10" rx="3" fill="#d1fae5"/>
+                <text x="379" y="199" font-size="5.5" fill="#10b981" text-anchor="middle">Baja</text>
+                <rect x="410" y="192" width="10" height="10" rx="2" fill="#3b82f6"/>
+                <rect x="423" y="192" width="10" height="10" rx="2" fill="#10b981"/>
+                <rect x="436" y="192" width="10" height="10" rx="2" fill="#f3f4f6"/>
+                <rect x="449" y="192" width="10" height="10" rx="2" fill="#ef4444"/>
+
+                <!-- Fila 5 — LP México DF -->
+                <line x1="8" y1="205" x2="472" y2="205" stroke="#f1f5f9" stroke-width="0.5"/>
+                <text x="16" y="215"  font-size="6.5" fill="#1e293b" font-weight="600">LP México DF - Turismo Viajeros</text>
+                <text x="148" y="215" font-size="6" fill="#64748b">LP Ciudad México DF</text>
+                <text x="248" y="215" font-size="6" fill="#94a3b8">Sin asignar</text>
+                <rect x="310" y="208" width="36" height="10" rx="3" fill="#f1f5f9"/>
+                <text x="328" y="215" font-size="5.5" fill="#6b7280" text-anchor="middle">● Borrador</text>
+                <rect x="365" y="208" width="28" height="10" rx="3" fill="#d1fae5"/>
+                <text x="379" y="215" font-size="5.5" fill="#10b981" text-anchor="middle">Baja</text>
+                <rect x="410" y="208" width="10" height="10" rx="2" fill="#3b82f6"/>
+                <rect x="423" y="208" width="10" height="10" rx="2" fill="#10b981"/>
+                <rect x="436" y="208" width="10" height="10" rx="2" fill="#f3f4f6"/>
+                <rect x="449" y="208" width="10" height="10" rx="2" fill="#ef4444"/>
+
+                <!-- Nota de modo demo -->
+                <text x="240" y="248" font-size="5.5" fill="#94a3b8" text-anchor="middle">Modo demo — los datos no persisten al recargar la página</text>
+              </svg>
+            </div>
+          </div>
+          <div class="project-info">
+            <div class="project-tags">
+              <span class="project-tag">React</span>
+              <span class="project-tag">JavaScript</span>
+              <span class="project-tag">Lucide Icons</span>
+              <span class="project-tag">useMemo</span>
+            </div>
+            <h3>Redactoria — Dashboard de LPs</h3>
+            <p>Dashboard administrativo para gestión de Landing Pages. Incluye <strong>stats en tiempo real</strong>, filtros por estado/prioridad/asignado, tabla interactiva con acciones, y modales para crear, editar, asignar y eliminar proyectos. Datos de muestra totalmente funcionales.</p>
+            <div class="project-links">
+              <a href="demos/redactoria/index.html" class="btn-demo" target="_blank">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Ver Demo
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <!-- Proyecto 1: Dashboard de Blogs -->
+        <article class="project-card">
+          <div class="mockup-browser">
+            <div class="mockup-bar">
+              <span class="mockup-dot red"></span>
+              <span class="mockup-dot yellow"></span>
+              <span class="mockup-dot green"></span>
+              <span class="mockup-url">dashboard-blogs · demo</span>
+            </div>
+            <div class="mockup-content">
+              <!-- Mockup SVG del dashboard de blogs -->
+              <svg viewBox="0 0 480 200" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
+                <!-- Fondo -->
+                <rect width="480" height="200" fill="#e6e6e6"/>
+                <!-- Nav -->
+                <rect width="480" height="36" fill="#fff"/>
+                <text x="12" y="23" font-size="11" font-weight="800" fill="#0f172a">Dashboard </text>
+                <text x="78" y="23" font-size="11" font-weight="800" fill="#3b82f6">Blogs</text>
+                <rect x="330" y="9" width="90" height="18" rx="6" fill="#fffbeb"/>
+                <text x="345" y="22" font-size="7" fill="#92400e" font-weight="600">Modo demo</text>
+                <!-- Stats -->
+                <rect x="8" y="44" width="100" height="38" rx="6" fill="#fff"/>
+                <text x="16" y="58" font-size="7" fill="#64748b">Artículos Totales</text>
+                <text x="16" y="73" font-size="14" font-weight="800" fill="#0f172a">8</text>
+                <rect x="116" y="44" width="100" height="38" rx="6" fill="#fff"/>
+                <text x="124" y="58" font-size="7" fill="#64748b">Publicados</text>
+                <text x="124" y="73" font-size="14" font-weight="800" fill="#0f172a">2</text>
+                <rect x="224" y="44" width="100" height="38" rx="6" fill="#fff"/>
+                <text x="232" y="58" font-size="7" fill="#64748b">Sin Asignar</text>
+                <text x="232" y="73" font-size="14" font-weight="800" fill="#0f172a">2</text>
+                <rect x="332" y="44" width="140" height="38" rx="6" fill="#fff"/>
+                <text x="340" y="58" font-size="7" fill="#64748b">En Progreso</text>
+                <text x="340" y="73" font-size="14" font-weight="800" fill="#0f172a">2</text>
+                <!-- Table section -->
+                <rect x="8" y="90" width="464" height="102" rx="6" fill="#fff"/>
+                <!-- Table header -->
+                <rect x="8" y="90" width="464" height="20" rx="6" fill="#f8fafc"/>
+                <text x="18" y="103" font-size="7" fill="#64748b" font-weight="600">Título del Contenido</text>
+                <text x="200" y="103" font-size="7" fill="#64748b" font-weight="600">Estado</text>
+                <text x="280" y="103" font-size="7" fill="#64748b" font-weight="600">Prioridad</text>
+                <text x="370" y="103" font-size="7" fill="#64748b" font-weight="600">Acciones</text>
+                <!-- Row 1 -->
+                <line x1="8" y1="111" x2="472" y2="111" stroke="#f1f5f9" stroke-width="1"/>
+                <text x="18" y="122" font-size="7.5" fill="#1e293b" font-weight="600">Guía completa de arriendo de carros…</text>
+                <rect x="196" y="115" width="60" height="12" rx="4" fill="#dcfce7"/>
+                <text x="202" y="124" font-size="6.5" fill="#15803d" font-weight="600">● Publicado</text>
+                <rect x="274" y="115" width="36" height="12" rx="4" fill="#fee2e2"/>
+                <text x="280" y="124" font-size="6.5" fill="#dc2626" font-weight="600">● Alta</text>
+                <!-- Row 2 -->
+                <line x1="8" y1="130" x2="472" y2="130" stroke="#f1f5f9" stroke-width="1"/>
+                <text x="18" y="141" font-size="7.5" fill="#1e293b" font-weight="600">5 destinos imperdibles para Europa</text>
+                <rect x="196" y="134" width="64" height="12" rx="4" fill="#f0f4ff"/>
+                <text x="202" y="143" font-size="6.5" fill="#4f46e5" font-weight="600">● Generado</text>
+                <rect x="274" y="134" width="36" height="12" rx="4" fill="#fee2e2"/>
+                <text x="280" y="143" font-size="6.5" fill="#dc2626" font-weight="600">● Alta</text>
+                <!-- Row 3 -->
+                <line x1="8" y1="149" x2="472" y2="149" stroke="#f1f5f9" stroke-width="1"/>
+                <text x="18" y="160" font-size="7.5" fill="#1e293b" font-weight="600">¿Qué debes saber antes del contrato?</text>
+                <rect x="196" y="153" width="58" height="12" rx="4" fill="#fff7ed"/>
+                <text x="202" y="162" font-size="6.5" fill="#c2410c" font-weight="600">● En Revisión</text>
+                <rect x="274" y="153" width="40" height="12" rx="4" fill="#fef9c3"/>
+                <text x="279" y="162" font-size="6.5" fill="#854d0e" font-weight="600">● Media</text>
+                <!-- Row 4 -->
+                <line x1="8" y1="168" x2="472" y2="168" stroke="#f1f5f9" stroke-width="1"/>
+                <text x="18" y="179" font-size="7.5" fill="#1e293b" font-weight="600">Tendencias de viaje en Latinoamérica</text>
+                <rect x="196" y="172" width="50" height="12" rx="4" fill="#f1f5f9"/>
+                <text x="202" y="181" font-size="6.5" fill="#475569" font-weight="600">● Borrador</text>
+                <rect x="274" y="172" width="34" height="12" rx="4" fill="#dcfce7"/>
+                <text x="279" y="181" font-size="6.5" fill="#166534" font-weight="600">● Baja</text>
+              </svg>
+            </div>
+          </div>
+          <div class="project-info">
+            <div class="project-tags">
+              <span class="project-tag">React</span>
+              <span class="project-tag">JavaScript</span>
+              <span class="project-tag">CSS</span>
+              <span class="project-tag">Unicons</span>
+            </div>
+            <h3>Sistema de Gestión de Blogs</h3>
+            <p>CMS editorial con 2 vistas: <strong>dashboard</strong> de artículos con filtros, estados y asignación de redactores; y <strong>editor IA</strong> con árbol de estructura, generación de contenido por sección, modo oscuro y FAQs automáticas.</p>
+            <div class="project-links">
+              <a href="demos/blog/index.html" class="btn-demo" target="_blank">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Ver Demo
+              </a>
+            </div>
+          </div>
+        </article>
+
 
       </div>
     </div>
@@ -1243,7 +1248,7 @@
 
   <!-- ─── FOOTER ────────────────────────────────────────────── -->
   <footer>
-    <p>Diseñado y desarrollado por <strong>Nicoll Tamara Rengifo Rojas</strong> · 2025</p>
+    <p>Diseñada con <em class="footer-heart">♥</em> en Bogotá · <strong>Nicoll Tamara Rengifo Rojas</strong> · 2026</p>
   </footer>
 
   <script src="main.js"></script>
